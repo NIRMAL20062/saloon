@@ -2,8 +2,8 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { sendOtp, verifyOtp } from '@/features/auth/otp';
 
 export default function VerifyScreen() {
@@ -45,7 +45,7 @@ export default function VerifyScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen style={styles.container}>
       <ThemedText type="title">Enter the code</ThemedText>
       <ThemedText style={styles.label}>Sent to {phone}</ThemedText>
       <TextInput
@@ -69,7 +69,7 @@ export default function VerifyScreen() {
       <Pressable onPress={onResend} disabled={resending} style={styles.resend}>
         <ThemedText type="link">{resending ? 'Resending…' : 'Resend code'}</ThemedText>
       </Pressable>
-    </ThemedView>
+    </Screen>
   );
 }
 

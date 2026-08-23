@@ -5,6 +5,8 @@ export type Shop = {
   name: string;
   address: string | null;
   is_open: boolean;
+  lat: number | null;
+  lng: number | null;
 };
 
 export type Service = {
@@ -29,7 +31,7 @@ export type Barber = {
 export async function fetchShops(search?: string): Promise<Shop[]> {
   let query = supabase
     .from('shops')
-    .select('id, name, address, is_open')
+    .select('id, name, address, is_open, lat, lng')
     .order('name', { ascending: true });
 
   if (search?.trim()) {
@@ -43,7 +45,7 @@ export async function fetchShops(search?: string): Promise<Shop[]> {
 
 export async function fetchShopDetail(shopId: string) {
   const [shopResult, servicesResult, barbersResult] = await Promise.all([
-    supabase.from('shops').select('id, name, address, is_open').eq('id', shopId).single(),
+    supabase.from('shops').select('id, name, address, is_open, lat, lng').eq('id', shopId).single(),
     supabase
       .from('services')
       .select('id, shop_id, name, price, duration_min')

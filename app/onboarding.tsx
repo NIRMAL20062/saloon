@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAuth, type Role } from '@/features/auth/auth-provider';
@@ -41,7 +42,7 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen style={styles.container}>
       <ThemedText type="title">Welcome to GLIDE</ThemedText>
 
       <ThemedText style={styles.label}>Your name</ThemedText>
@@ -81,7 +82,7 @@ export default function OnboardingScreen() {
           <ThemedText style={styles.buttonText}>Continue</ThemedText>
         )}
       </Pressable>
-    </ThemedView>
+    </Screen>
   );
 }
 

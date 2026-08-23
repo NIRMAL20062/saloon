@@ -247,14 +247,17 @@ Each phase below gives the AI enough to actually implement it: what screens exis
 - Screens: shop list (name, rating placeholder, distance placeholder), search/filter by name, shop profile screen showing services + barbers.
 - Basic RLS: anyone authenticated can `SELECT` on `shops`/`services`/`barbers` where `status = 'approved'` (or just all rows for now if `status` doesn't exist yet — add the approval gate when Phase 3 introduces shop approval).
 - Data fetched via Supabase client queries — no hardcoded mock arrays in the app.
+- **Amendment (post-MVP-plan, still Phase 2):** distance-sorted discovery was pulled forward from Phase 9 at the builder's request. The shop list requests the device's foreground location (`expo-location`, `requestForegroundPermissionsAsync` + `getCurrentPositionAsync`) and, when granted, sorts shops nearest-first using a client-side Haversine calculation (`features/shops/geo.ts`) against each shop's `lat`/`lng`. Denying the permission is a fully supported path, not an error state — the list simply falls back to the server's name-ordering and shows a small non-blocking banner offering to enable it later. This is *only* the distance number/sort order; the actual visual map with pins is still Phase 9's job (see that phase's note below).
 
 **Security checklist for this phase:**
 - Confirm the read policy doesn't accidentally expose unapproved/other partners' draft data once `status` exists.
+- Location is requested as foreground-only (`locationWhenInUsePermission`), never background/always — GLIDE has no reason to track a customer's location while the app isn't open. Coordinates stay client-side for the sort; they are never sent to `analytics_events` (Phase 11) or logged, consistent with Section 5.7.
 
 **Testing for this phase:**
 - Manual: the shop list, shop profile, and service/barber lists on screen exactly match what's in the Supabase tables — edit a row in the table editor and confirm the app reflects it after a refresh.
+- Manual: deny the location permission and confirm the list still loads (name-ordered, banner shown); grant it and confirm shops reorder nearest-first and each card shows a real "X.X km away" instead of the placeholder.
 
-**Don't build yet:** any booking action, location-based search (a simple list is fine — real geolocation/radius filtering can wait until Instant Booking needs it in Phase 9).
+**Don't build yet:** any booking action, or a real interactive map/pins UI — that visual layer is still Phase 9.
 
 ---
 
@@ -403,6 +406,7 @@ Each phase below gives the AI enough to actually implement it: what screens exis
 - New table: `booking_offers` (id, booking_id, shop_id, offered_at, responded_at, response) to track the broadcast.
 - `bookings.mode = 'instant'`, new status `broadcasting`, plus `max_price`, `final_amount`, `broadcast_radius_km`, `broadcast_expires_at`.
 - Eligibility query for "which shops get this request": approved, open, `accepts_instant = true`, within a configured radius (basic lat/lng distance check is fine for MVP — no need for a mapping SDK yet), offers the requested service(s), service price ≤ customer's max price. Recommended gate: only show "Book Instantly" if 3+ eligible shops exist, otherwise fall back to the normal shop list.
+- **Note:** the customer-facing "distance to shop" number and nearest-first sort were already pulled forward into Phase 2 (device GPS + client-side Haversine, no map UI). What's still genuinely Phase 9's job: (a) the *visual* interactive map with pins (Google Maps/`react-native-maps` or an OSS alternative like MapLibre — either requires an EAS development build, since neither runs inside plain Expo Go), and (b) this server-side broadcast-radius eligibility filter, which is a different computation (which shops get notified) from the client-side display sort built in Phase 2.
 - `create-instant-booking` Edge Function: creates the booking in `broadcasting`, inserts a `booking_offers` row per eligible shop, pushes a high-priority notification to each.
 - **Atomic first-accept-wins**, the critical piece — a single conditional `UPDATE` that only succeeds for the first shop to hit it:
   ```sql

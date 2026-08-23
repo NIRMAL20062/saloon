@@ -11,13 +11,13 @@
 with owner as (
   select id from public.profiles where role = 'partner' limit 1
 )
-insert into public.shops (owner_id, name, address, status, is_open)
-select owner.id, v.name, v.address, 'approved', true
+insert into public.shops (owner_id, name, address, status, is_open, lat, lng)
+select owner.id, v.name, v.address, 'approved', true, v.lat, v.lng
 from owner, (values
-  ('Sharp Cuts', '12 MG Road, Bengaluru'),
-  ('The Gentlemen''s Lounge', '45 Brigade Road, Bengaluru'),
-  ('Fade Factory', '9 Indiranagar 100ft Road, Bengaluru')
-) as v(name, address);
+  ('Sharp Cuts', '12 MG Road, Bengaluru', 12.9757, 77.6096),
+  ('The Gentlemen''s Lounge', '45 Brigade Road, Bengaluru', 12.9698, 77.6083),
+  ('Fade Factory', '9 Indiranagar 100ft Road, Bengaluru', 12.9784, 77.6408)
+) as v(name, address, lat, lng);
 
 insert into public.services (shop_id, name, price, duration_min)
 select s.id, v.name, v.price, v.duration_min

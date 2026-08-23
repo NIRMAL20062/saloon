@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput } from 'react-native';
 
+import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { DEV_ACCOUNTS } from '@/features/auth/dev-accounts';
@@ -50,7 +51,7 @@ export default function PhoneScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen style={styles.container}>
       <ThemedText type="title">GLIDE</ThemedText>
       <ThemedText style={styles.label}>Enter your phone number</ThemedText>
       <TextInput
@@ -85,7 +86,7 @@ export default function PhoneScreen() {
           ))}
         </ThemedView>
       ) : null}
-    </ThemedView>
+    </Screen>
   );
 }
 

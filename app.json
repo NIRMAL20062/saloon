@@ -39,7 +39,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow GLIDE to use your location to show nearby shops and sort them by distance."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
