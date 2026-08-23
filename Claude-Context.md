@@ -1,4 +1,3 @@
-@AGENTS.md
 # GLIDE — AI Development Context & Roadmap
 
 **Purpose of this document:** paste this into your AI coding assistant (Claude Code, Cursor, etc.) as project context. It tells the AI what GLIDE is, how to behave while building it, and exactly what to implement in each phase — screens, tables, fields, server logic, security controls, and tests — so it can act on this without you having to re-explain the product every session.
@@ -188,6 +187,8 @@ GLIDE uses four layers of testing, introduced progressively as the stack gains t
 4. **End-to-end scenario testing (concentrated in Phase 13, but the relevant slice runs after each phase it applies to).** The full matrix in Section 8 — concurrency races, timeouts, duplicate webhooks, RLS boundary checks — run manually or scripted against test accounts.
 
 **Test data discipline:** seed/test data lives in Supabase's test-mode project state, is clearly named (`Test Shop 1`, phone numbers from a reserved test range), and is never mixed into what becomes the production dataset — when the project is ready to go live, a fresh production Supabase project is provisioned rather than "cleaning up" the dev one.
+
+**Dev-only sign-in, bypassing SMS cost (introduced Phase 1):** the hosted Supabase project has no free "test OTP" dashboard toggle — that feature (`SMS_TEST_OTP`) only exists for a self-hosted/local Supabase stack, which this project deliberately avoids running (Section 7). Since a real phone OTP costs real SMS-provider money on every send, `app/(auth)/phone.tsx` also renders a couple of "Dev sign-in" buttons that call `supabase.auth.signInWithPassword` against one or two throwaway Supabase Auth accounts (see `features/auth/dev-accounts.ts`). This block is wrapped in `if (__DEV__)`, which is `false` in any EAS/production build — it cannot ship, by construction, not by discipline. It's not a security bypass: it's a second legitimate Supabase Auth method producing a real session that flows through the exact same `AuthProvider`/RLS/profile machinery as a real OTP login. Don't remove this thinking it's leftover debug cruft, and don't "upgrade" it to work in production — the whole point is that it's inert outside development.
 
 ---
 
