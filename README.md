@@ -1,6 +1,15 @@
-# Welcome to your Expo app 👋
+# GLIDE — On-Demand Salon Booking
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## About
+
+GLIDE is an Android-first booking platform for barbers and salons. Customers can schedule a slot in advance or request an instant booking, while partners manage services, barbers, and bookings from their own app flow.
+
+The product is built around a trust-first booking model where a service starts only after:
+- the shop accepts the booking,
+- payment is completed, and
+- the customer is verified at arrival.
+
+This repository contains the Expo (SDK 54) application and Supabase backend setup used to build both customer and partner experiences.
 
 ## Get started
 
