@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { withOpeningHoursDefaults, type OpeningHours } from '@/features/shops/partner-api';
 
 export type Shop = {
   id: string;
@@ -7,6 +8,7 @@ export type Shop = {
   is_open: boolean;
   lat: number | null;
   lng: number | null;
+  opening_hours: OpeningHours;
 };
 
 export type Service = {
@@ -28,11 +30,10 @@ export type Barber = {
  * shops — there is no client-side status filter here on purpose, so the
  * query stays identical to what the server actually allows.
  */
+const SHOP_COLUMNS = 'id, name, address, is_open, lat, lng, opening_hours';
+
 export async function fetchShops(search?: string): Promise<Shop[]> {
-  let query = supabase
-    .from('shops')
-    .select('id, name, address, is_open, lat, lng')
-    .order('name', { ascending: true });
+  let query = supabase.from('shops').select(SHOP_COLUMNS).order('name', { ascending: true });
 
   if (search?.trim()) {
     query = query.ilike('name', `%${search.trim()}%`);
@@ -40,12 +41,12 @@ export async function fetchShops(search?: string): Promise<Shop[]> {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []).map((s) => ({ ...s, opening_hours: withOpeningHoursDefaults(s.opening_hours) }));
 }
 
 export async function fetchShopDetail(shopId: string) {
   const [shopResult, servicesResult, barbersResult] = await Promise.all([
-    supabase.from('shops').select('id, name, address, is_open, lat, lng').eq('id', shopId).single(),
+    supabase.from('shops').select(SHOP_COLUMNS).eq('id', shopId).single(),
     supabase
       .from('services')
       .select('id, shop_id, name, price, duration_min')
@@ -64,8 +65,9 @@ export async function fetchShopDetail(shopId: string) {
   if (servicesResult.error) throw servicesResult.error;
   if (barbersResult.error) throw barbersResult.error;
 
+  const shop = shopResult.data as Omit<Shop, 'opening_hours'> & { opening_hours: unknown };
   return {
-    shop: shopResult.data as Shop,
+    shop: { ...shop, opening_hours: withOpeningHoursDefaults(shop.opening_hours) },
     services: (servicesResult.data ?? []) as Service[],
     barbers: (barbersResult.data ?? []) as Barber[],
   };

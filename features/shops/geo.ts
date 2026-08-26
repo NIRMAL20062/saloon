@@ -27,6 +27,22 @@ function toRad(deg: number): number {
 }
 
 /**
+ * Checks the current foreground location permission *without* triggering the
+ * OS prompt — used to decide whether to show an in-app rationale card before
+ * the one-shot system dialog, rather than firing that dialog cold on first
+ * launch with no context for why the app wants it.
+ */
+export async function getLocationPermissionStatus(): Promise<Location.PermissionStatus | null> {
+  try {
+    const { status } = await Location.getForegroundPermissionsAsync();
+    return status;
+  } catch (e) {
+    console.warn('[geo] failed to read permission status:', e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+/**
  * Returns the device's current coordinates, or `null` if permission was
  * denied or the position couldn't be read. Never throws — a customer who
  * declines the location prompt should still see the (unsorted) shop list,
