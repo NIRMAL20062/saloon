@@ -3,6 +3,11 @@ import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { ArrivalCard } from '@/components/arrival-card';
+import { FilterModal, type FilterOptions } from '@/components/filter-modal';
+import { LookbookCard, type LookbookItem } from '@/components/lookbook-card';
+import { NotificationsModal } from '@/components/notifications-modal';
+import { PromoBanner } from '@/components/promo-banner';
 import { RadarSearchModal } from '@/components/radar-search-modal';
 import { Screen } from '@/components/screen';
 import { ShopCard } from '@/components/shop-card';
@@ -10,6 +15,7 @@ import { ShopCardSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
+import { useAuth } from '@/features/auth/auth-provider';
 import { fetchShops, type Shop } from '@/features/shops/api';
 import {
   distanceKm,
@@ -22,6 +28,30 @@ import { tapFeedback } from '@/lib/haptics';
 
 const SKELETON_ROWS = [0, 1, 2];
 
+const LOOKBOOK_ITEMS: LookbookItem[] = [
+  {
+    id: '1',
+    title: 'Textured Crop Fade',
+    category: 'Haircut',
+    imageUrl: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=400&q=80',
+    tag: 'TRENDING #1',
+  },
+  {
+    id: '2',
+    title: 'Beard Sculpt & Towel',
+    category: 'Grooming',
+    imageUrl: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=400&q=80',
+    tag: 'POPULAR',
+  },
+  {
+    id: '3',
+    title: 'Slicked Back Undercut',
+    category: 'Styling',
+    imageUrl: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=400&q=80',
+    tag: 'CLASSIC',
+  },
+];
+
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'haircut', label: 'Haircut' },
@@ -33,6 +63,7 @@ const CATEGORIES = [
 ];
 
 export default function CustomerHomeScreen() {
+  const { profile } = useAuth();
   const [shops, setShops] = useState<Shop[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -40,6 +71,8 @@ export default function CustomerHomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [radarModalVisible, setRadarModalVisible] = useState(false);
+  const [notifModalVisible, setNotifModalVisible] = useState(false);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
 
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
@@ -143,6 +176,15 @@ export default function CustomerHomeScreen() {
             style={styles.iconCircle}
             onPress={() => {
               tapFeedback();
+              setNotifModalVisible(true);
+            }}>
+            <Ionicons name="notifications-outline" size={20} color={textPrimary} />
+          </Pressable>
+
+          <Pressable
+            style={styles.iconCircle}
+            onPress={() => {
+              tapFeedback();
               router.push('/(customer)/saved');
             }}>
             <Ionicons name="heart-outline" size={20} color={textPrimary} />
@@ -169,21 +211,52 @@ export default function CustomerHomeScreen() {
         </ThemedText>
       </View>
 
+      {/* Arrival Card Banner for Active Booking */}
+      <ArrivalCard
+        shopName="The Grooming Station"
+        barberName="Alex"
+        timeSlot="Today · 05:00 PM"
+        minutesRemaining={18}
+      />
+
       {/* Premium Search Input Box */}
-      <View style={[styles.searchBox, { backgroundColor: surface, borderColor: surfaceBorder }]}>
-        <Ionicons name="search-outline" size={20} color={textMuted} style={styles.searchIcon} />
-        <ThemedTextInput
-          value={search}
-          onChangeText={onSearchChange}
-          placeholder="Search salons, services, hairstyles..."
-          style={styles.searchInput}
-        />
-        {search ? (
-          <Pressable onPress={() => onSearchChange('')} style={styles.clearBtn}>
-            <Ionicons name="close-circle" size={18} color={textMuted} />
-          </Pressable>
-        ) : null}
+      <View style={styles.searchRow}>
+        <View style={[styles.searchBox, { backgroundColor: surface, borderColor: surfaceBorder, flex: 1 }]}>
+          <Ionicons name="search-outline" size={20} color={textMuted} style={styles.searchIcon} />
+          <ThemedTextInput
+            value={search}
+            onChangeText={onSearchChange}
+            placeholder="Search salons, services, hairstyles..."
+            style={styles.searchInput}
+          />
+          {search ? (
+            <Pressable onPress={() => onSearchChange('')} style={styles.clearBtn}>
+              <Ionicons name="close-circle" size={18} color={textMuted} />
+            </Pressable>
+          ) : null}
+        </View>
+
+        <Pressable
+          onPress={() => {
+            tapFeedback();
+            setFilterModalVisible(true);
+          }}
+          style={({ pressed }) => [
+            styles.filterIconBtn,
+            { backgroundColor: surface, borderColor: surfaceBorder },
+            pressed && styles.pressed,
+          ]}>
+          <Ionicons name="options-outline" size={20} color={textPrimary} />
+        </Pressable>
       </View>
+
+      {/* Promo Banner Card */}
+      <PromoBanner
+        title="GLIDE PASS"
+        subtitle="Get 15% OFF your first 3 salon bookings"
+        badgeLabel="SPECIAL OFFER"
+        ctaText="Claim Pass"
+      />
 
       {/* Instant Barber Match Action Card */}
       <Pressable
@@ -209,6 +282,16 @@ export default function CustomerHomeScreen() {
         </View>
         <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
       </Pressable>
+
+      {/* Trending Lookbook Feed */}
+      <View style={styles.lookbookSection}>
+        <ThemedText style={[styles.sectionTitle, { fontSize: 16, marginBottom: 8 }]}>Trending Styles</ThemedText>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {LOOKBOOK_ITEMS.map((item) => (
+            <LookbookCard key={item.id} item={item} onPress={() => setSearch(item.title)} />
+          ))}
+        </ScrollView>
+      </View>
 
       {/* Location Priming Banner */}
       {showLocationPriming ? (
@@ -343,6 +426,23 @@ export default function CustomerHomeScreen() {
         visible={radarModalVisible}
         onClose={() => setRadarModalVisible(false)}
       />
+
+      {/* Notifications Drawer Sheet */}
+      <NotificationsModal
+        visible={notifModalVisible}
+        onClose={() => setNotifModalVisible(false)}
+      />
+
+      {/* Filter & Sort Bottom Sheet */}
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        onApplyFilters={(filters) => {
+          if (filters.sortBy === 'rating') {
+            setShops((prev) => [...prev].sort((a, b) => 4.8 - 4.5));
+          }
+        }}
+      />
     </Screen>
   );
 }
@@ -350,6 +450,22 @@ export default function CustomerHomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: Spacing.lg },
   feedHeader: { gap: Spacing.md, marginBottom: Spacing.md, paddingTop: Spacing.xs },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  filterIconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lookbookSection: {
+    marginVertical: Spacing.xs,
+  },
   topNavRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

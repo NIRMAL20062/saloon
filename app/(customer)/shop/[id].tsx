@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Vie
 import { Badge } from '@/components/badge';
 import { FloatingCartBar } from '@/components/floating-cart-bar';
 import { Screen } from '@/components/screen';
+import { ReviewCard } from '@/components/review-card';
 import { ServiceItemCard } from '@/components/service-item-card';
 import { ThemedText } from '@/components/themed-text';
 import { Chip } from '@/components/ui/chip';
@@ -299,6 +300,29 @@ const GALLERY_IMAGES = [
               />
             ))
           )}
+        </View>
+
+        {/* Customer Reviews & 5-Star Breakdown Section */}
+        <View style={{ marginTop: Spacing.lg, gap: Spacing.sm }}>
+          <ThemedText style={styles.sectionHeader}>Customer Reviews</ThemedText>
+
+          <ReviewCard
+            id="1"
+            authorName="Rahul S."
+            rating={5}
+            dateText="2 days ago"
+            serviceName="Signature Fade & Beard Sculpt"
+            comment="Alex is an absolute master craftsman. The taper fade was razor sharp and hot towel treatment was super relaxing!"
+          />
+
+          <ReviewCard
+            id="2"
+            authorName="Vikram K."
+            rating={5}
+            dateText="1 week ago"
+            serviceName="Executive Haircut"
+            comment="Clean shop, warm aesthetic, and zero wait time. Easily the best grooming experience in town."
+          />
         </View>
       </ScrollView>
 
