@@ -142,7 +142,7 @@ export function QrScannerModal({ visible, onClose, onSuccessVerification }: QrSc
                 Point camera at customer&apos;s GLIDE QR code
               </ThemedText>
               <Button
-                title={verifying ? 'Verifying...' : 'Simulate QR Scan 📷'}
+                title={verifying ? 'Verifying...' : 'Simulate QR Scan'}
                 onPress={handleSimulateQrScan}
                 loading={verifying}
                 style={styles.scanSimBtn}

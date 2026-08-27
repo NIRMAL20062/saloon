@@ -25,6 +25,10 @@ export function LiveBookingBar({
 }: LiveBookingBarProps) {
   const tint = useThemeColor({}, 'tint');
   const onTint = useThemeColor({}, 'onTint');
+  const surface = useThemeColor({}, 'surface');
+  const surfaceBorder = useThemeColor({}, 'surfaceBorder');
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
   const success = useThemeColor({}, 'success');
 
   const handlePress = () => {
@@ -32,7 +36,6 @@ export function LiveBookingBar({
     if (onPressDetails) {
       onPressDetails();
     } else {
-      // Default navigation to booking status/tracker view
       router.push({ pathname: '/(customer)', params: { activeBooking: bookingId } });
     }
   };
@@ -40,7 +43,12 @@ export function LiveBookingBar({
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => [styles.container, Shadow.glow, pressed && styles.pressed]}>
+      style={({ pressed }) => [
+        styles.container,
+        { backgroundColor: surface, borderColor: surfaceBorder },
+        Shadow.glow,
+        pressed && styles.pressed,
+      ]}>
       <View style={styles.contentRow}>
         <View style={styles.statusGroup}>
           <View style={styles.pulseContainer}>
@@ -48,11 +56,11 @@ export function LiveBookingBar({
           </View>
           <View style={styles.textGroup}>
             <View style={styles.statusHeaderRow}>
-              <ThemedText style={styles.statusLabel}>{statusLabel}</ThemedText>
-              <ThemedText style={styles.dotSeparator}>•</ThemedText>
-              <ThemedText style={styles.timeText}>{slotTime}</ThemedText>
+              <ThemedText style={[styles.statusLabel, { color: success }]}>{statusLabel}</ThemedText>
+              <ThemedText style={[styles.dotSeparator, { color: textMuted }]}>•</ThemedText>
+              <ThemedText style={[styles.timeText, { color: textMuted }]}>{slotTime}</ThemedText>
             </View>
-            <ThemedText style={styles.shopName} numberOfLines={1}>
+            <ThemedText style={[styles.shopName, { color: textPrimary }]} numberOfLines={1}>
               {shopName}
             </ThemedText>
           </View>
@@ -73,9 +81,7 @@ const styles = StyleSheet.create({
     bottom: Spacing.xl,
     left: Spacing.lg,
     right: Spacing.lg,
-    backgroundColor: '#0F172A',
-    borderColor: '#6366F1',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderRadius: Radius.xl,
     padding: Spacing.md,
     zIndex: 999,
@@ -100,7 +106,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: Radius.pill,
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: 'rgba(85, 214, 138, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -119,22 +125,18 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statusLabel: {
-    color: '#10B981',
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 0.2,
   },
   dotSeparator: {
-    color: '#64748B',
     fontSize: 10,
   },
   timeText: {
-    color: '#94A3B8',
     fontSize: 12,
     fontWeight: '600',
   },
   shopName: {
-    color: '#F8FAFC',
     fontSize: 14,
     fontWeight: '700',
   },

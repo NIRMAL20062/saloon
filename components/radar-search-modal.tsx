@@ -22,9 +22,11 @@ export function RadarSearchModal({ visible, onClose, onShopMatched }: RadarSearc
 
   const tint = useThemeColor({}, 'tint');
   const onTint = useThemeColor({}, 'onTint');
-  const cyan = '#06B6D4';
+  const surface = useThemeColor({}, 'surface');
+  const surfaceBorder = useThemeColor({}, 'surfaceBorder');
   const success = useThemeColor({}, 'success');
   const textMuted = useThemeColor({}, 'textMuted');
+
 
   useEffect(() => {
     if (!visible) {
@@ -63,8 +65,8 @@ export function RadarSearchModal({ visible, onClose, onShopMatched }: RadarSearc
         <Card style={styles.card}>
           <View style={styles.header}>
             <View style={styles.badgeRow}>
-              <View style={[styles.pulseDot, { backgroundColor: cyan }]} />
-              <ThemedText style={[styles.badgeText, { color: cyan }]}>INSTANT RADAR BROADCAST</ThemedText>
+              <View style={[styles.pulseDot, { backgroundColor: tint }]} />
+              <ThemedText style={[styles.badgeText, { color: tint }]}>INSTANT RADAR BROADCAST</ThemedText>
             </View>
             <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={12}>
               <Ionicons name="close" size={20} color={textMuted} />
@@ -88,10 +90,10 @@ export function RadarSearchModal({ visible, onClose, onShopMatched }: RadarSearc
           ) : (
             <View style={styles.radarContainer}>
               {/* Radar Rings Animation Simulation */}
-              <View style={styles.radarCircle3}>
-                <View style={styles.radarCircle2}>
-                  <View style={styles.radarCircle1}>
-                    <Ionicons name="flash" size={32} color={cyan} />
+              <View style={[styles.radarCircle3, { backgroundColor: surface, borderColor: surfaceBorder }]}>
+                <View style={[styles.radarCircle2, { backgroundColor: surface, borderColor: surfaceBorder }]}>
+                  <View style={[styles.radarCircle1, { backgroundColor: surface, borderColor: tint }]}>
+                    <Ionicons name="flash" size={32} color={tint} />
                   </View>
                 </View>
               </View>
@@ -105,7 +107,7 @@ export function RadarSearchModal({ visible, onClose, onShopMatched }: RadarSearc
                     ? `📡 Reached ${matchCount} active salons near you`
                     : 'Scanning 2km broadcast radius...'}
                 </ThemedText>
-                <ThemedText style={[styles.timerText, { color: cyan }]}>
+                <ThemedText style={[styles.timerText, { color: tint }]}>
                   Timeout in 0:{secondsLeft.toString().padStart(2, '0')}
                 </ThemedText>
               </View>
@@ -122,7 +124,7 @@ export function RadarSearchModal({ visible, onClose, onShopMatched }: RadarSearc
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(11, 15, 25, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'center',
     padding: Spacing.lg,
   },
@@ -130,8 +132,7 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     gap: Spacing.lg,
     borderRadius: Radius.xl,
-    borderColor: '#6366F1',
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   header: {
     flexDirection: 'row',
@@ -165,32 +166,26 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: 'rgba(6, 182, 212, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.2)',
   },
   radarCircle2: {
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor: 'rgba(6, 182, 212, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(6, 182, 212, 0.35)',
   },
   radarCircle1: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#0F172A',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#06B6D4',
-    ...Shadow.glowCyan,
+    ...Shadow.glow,
   },
   statusBlock: {
     alignItems: 'center',

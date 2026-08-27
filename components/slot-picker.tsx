@@ -71,6 +71,8 @@ export function SlotPicker({
   const warning = useThemeColor({}, 'warning');
   const warningSurface = useThemeColor({}, 'warningSurface');
 
+  const onTint = useThemeColor({}, 'onTint');
+
   const handleDatePress = (dateStr: string) => {
     tapFeedback();
     if (onSelectDate) onSelectDate(dateStr);
@@ -115,7 +117,7 @@ export function SlotPicker({
                 <ThemedText
                   style={[
                     styles.slotTimeText,
-                    isSelected && styles.selectedText,
+                    isSelected && { color: onTint },
                     isDisabled && { color: textMuted },
                   ]}>
                   {slot.timeLabel}
@@ -161,10 +163,10 @@ export function SlotPicker({
                 isSelected && { backgroundColor: tint, borderColor: tint },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText style={[styles.dayName, isSelected && styles.selectedText]}>
+              <ThemedText style={[styles.dayName, isSelected && { color: onTint }]}>
                 {day.dayName}
               </ThemedText>
-              <ThemedText style={[styles.dateLabel, isSelected && styles.selectedText]}>
+              <ThemedText style={[styles.dateLabel, isSelected && { color: onTint }]}>
                 {day.dateLabel}
               </ThemedText>
             </Pressable>
@@ -179,6 +181,7 @@ export function SlotPicker({
       {renderPeriodGroup('EVENING SLOTS', 'evening', 'moon-outline')}
     </View>
   );
+
 }
 
 const styles = StyleSheet.create({

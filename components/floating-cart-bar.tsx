@@ -39,13 +39,13 @@ export function FloatingCartBar({
         ]}>
         {/* Left summary info */}
         <View style={styles.leftCol}>
-          <View style={styles.itemBadge}>
+          <View style={[styles.itemBadge, { backgroundColor: onTint }]}>
             <ThemedText style={[styles.itemBadgeText, { color: tint }]}>{itemCount}</ThemedText>
           </View>
 
           <View style={styles.textStack}>
-            <ThemedText style={[styles.priceText, { color: '#FFF' }]}>₹{totalPrice}</ThemedText>
-            <ThemedText style={[styles.subText, { color: 'rgba(255,255,255,0.8)' }]}>
+            <ThemedText style={[styles.priceText, { color: onTint }]}>₹{totalPrice}</ThemedText>
+            <ThemedText style={[styles.subText, { color: onTint, opacity: 0.8 }]}>
               {itemCount} {itemCount === 1 ? 'service' : 'services'} selected
             </ThemedText>
           </View>
@@ -53,13 +53,14 @@ export function FloatingCartBar({
 
         {/* Right CTA arrow button */}
         <View style={styles.rightCol}>
-          <ThemedText style={[styles.ctaText, { color: '#FFF' }]}>{ctaText}</ThemedText>
-          <Ionicons name="arrow-forward" size={18} color="#FFF" />
+          <ThemedText style={[styles.ctaText, { color: onTint }]}>{ctaText}</ThemedText>
+          <Ionicons name="arrow-forward" size={18} color={onTint} />
         </View>
       </Pressable>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   outerContainer: {

@@ -38,6 +38,8 @@ export function ServiceItemCard({
   const tintSurface = useThemeColor({}, 'tintSurface');
   const accent = useThemeColor({}, 'accent');
   const accentSurface = useThemeColor({}, 'accentSurface');
+  const onTint = useThemeColor({}, 'onTint');
+
 
   const defaultImage =
     'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=400&q=80';
@@ -96,13 +98,13 @@ export function ServiceItemCard({
           {quantity > 0 ? (
             <View style={[styles.counterPill, { backgroundColor: tint, borderColor: tint }]}>
               <Pressable onPress={handleRemove} style={styles.counterBtn}>
-                <Ionicons name="remove" size={14} color="#FFF" />
+                <Ionicons name="remove" size={14} color={onTint} />
               </Pressable>
 
-              <ThemedText style={styles.counterValue}>{quantity}</ThemedText>
+              <ThemedText style={[styles.counterValue, { color: onTint }]}>{quantity}</ThemedText>
 
               <Pressable onPress={handleAdd} style={styles.counterBtn}>
-                <Ionicons name="add" size={14} color="#FFF" />
+                <Ionicons name="add" size={14} color={onTint} />
               </Pressable>
             </View>
           ) : (
@@ -120,6 +122,7 @@ export function ServiceItemCard({
       </View>
     </View>
   );
+
 }
 
 const styles = StyleSheet.create({
