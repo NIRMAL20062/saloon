@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { OpeningHoursEditor } from '@/components/opening-hours-editor';
+import { QrScannerModal } from '@/components/qr-scanner-modal';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
@@ -23,7 +24,7 @@ import {
   type OwnShop,
 } from '@/features/shops/partner-api';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { successFeedback } from '@/lib/haptics';
+import { successFeedback, tapFeedback } from '@/lib/haptics';
 
 export default function PartnerHomeScreen() {
   const { profile, signOut } = useAuth();
@@ -32,6 +33,7 @@ export default function PartnerHomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [togglingOpen, setTogglingOpen] = useState(false);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -54,6 +56,7 @@ export default function PartnerHomeScreen() {
   const textPrimary = useThemeColor({}, 'text');
   const textMuted = useThemeColor({}, 'textMuted');
   const surfaceBorder = useThemeColor({}, 'surfaceBorder');
+
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -244,12 +247,25 @@ export default function PartnerHomeScreen() {
           <View style={styles.section}>
             <ThemedText style={[styles.sectionTitle, { color: textMuted }]}>QUICK ACTIONS</ThemedText>
 
+            <Pressable
+              onPress={() => {
+                tapFeedback();
+                setQrModalVisible(true);
+              }}
+              style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}>
+              <ThemedText style={styles.actionRowText}>Scan Customer QR Code</ThemedText>
+              <Ionicons name="qr-code-outline" size={18} color={tint} />
+            </Pressable>
+
+            <View style={[styles.hairline, { backgroundColor: surfaceBorder }]} />
+
             <Link href="/(partner)/services" asChild>
               <Pressable style={({ pressed }) => [styles.actionRow, pressed && styles.pressed]}>
                 <ThemedText style={styles.actionRowText}>Services & Prices</ThemedText>
                 <Ionicons name="arrow-forward" size={18} color={textPrimary} />
               </Pressable>
             </Link>
+
 
             <View style={[styles.hairline, { backgroundColor: surfaceBorder }]} />
 
@@ -340,9 +356,15 @@ export default function PartnerHomeScreen() {
           <ThemedText style={[styles.signOutText, { color: textMuted }]}>SIGN OUT</ThemedText>
         </Pressable>
       </ScrollView>
+
+      <QrScannerModal
+        visible={qrModalVisible}
+        onClose={() => setQrModalVisible(false)}
+      />
     </Screen>
   );
 }
+
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },

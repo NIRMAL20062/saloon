@@ -60,7 +60,7 @@ export default function OnboardingScreen() {
     <Screen style={styles.container}>
       <View style={styles.headerBlock}>
         <ThemedText type="title" style={styles.title}>
-          Welcome to GLIDE 👋
+          Welcome to GLIDE
         </ThemedText>
         <ThemedText style={[styles.subtitle, { color: textMuted }]}>
           Set up your profile to get started
