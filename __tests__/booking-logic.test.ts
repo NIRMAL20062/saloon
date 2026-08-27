@@ -8,15 +8,28 @@ import {
 } from '../supabase/functions/_shared/booking-logic';
 
 describe('booking state machine', () => {
-  it('allows every legal Phase 4 transition', () => {
+  it('allows every legal transition', () => {
     expect(canTransition('draft', 'awaiting_shop')).toBe(true);
-    expect(canTransition('awaiting_shop', 'confirmed')).toBe(true);
+    expect(canTransition('awaiting_shop', 'payment_pending')).toBe(true);
     expect(canTransition('awaiting_shop', 'rejected')).toBe(true);
     expect(canTransition('awaiting_shop', 'expired')).toBe(true);
+    expect(canTransition('payment_pending', 'confirmed')).toBe(true);
+    expect(canTransition('payment_pending', 'expired')).toBe(true);
   });
 
-  it('rejects a draft jumping straight to confirmed, skipping awaiting_shop', () => {
+  it('rejects a draft jumping straight to confirmed, skipping awaiting_shop and payment_pending', () => {
     expect(canTransition('draft', 'confirmed')).toBe(false);
+  });
+
+  it('rejects a shop accepting straight into confirmed, skipping payment_pending', () => {
+    // This is the core Phase 5 rule: only a captured payment can confirm a
+    // booking, never the shop's accept action alone.
+    expect(canTransition('awaiting_shop', 'confirmed')).toBe(false);
+  });
+
+  it('rejects payment_pending going anywhere but confirmed or expired', () => {
+    expect(canTransition('payment_pending', 'awaiting_shop')).toBe(false);
+    expect(canTransition('payment_pending', 'rejected')).toBe(false);
   });
 
   it('rejects every transition out of a terminal status', () => {
@@ -33,7 +46,7 @@ describe('booking state machine', () => {
 
   it('assertTransition throws a clear error on an illegal jump, and nothing on a legal one', () => {
     expect(() => assertTransition('draft', 'confirmed')).toThrow(/cannot move/i);
-    expect(() => assertTransition('awaiting_shop', 'confirmed')).not.toThrow();
+    expect(() => assertTransition('awaiting_shop', 'payment_pending')).not.toThrow();
   });
 });
 

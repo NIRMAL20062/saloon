@@ -1,5 +1,6 @@
 import { getAuthenticatedUserId, serviceRoleClient } from '../_shared/auth.ts';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { PAYMENT_WINDOW_MINUTES } from '../_shared/payments-logic.ts';
 
 function isUuid(value: unknown): value is string {
   return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -28,6 +29,7 @@ Deno.serve(async (req) => {
   const { data, error } = await supabase.rpc('accept_booking', {
     p_booking_id: booking_id,
     p_actor_id: actorId,
+    p_payment_window_minutes: PAYMENT_WINDOW_MINUTES,
   });
 
   if (error) {
