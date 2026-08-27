@@ -62,7 +62,7 @@ export default function CustomerLayout() {
       />
 
       <Tabs.Screen
-        name="bookings"
+        name="bookings/index"
         options={{
           title: 'Bookings',
           tabBarIcon: ({ color, focused }) => (
@@ -109,6 +109,12 @@ export default function CustomerLayout() {
       />
       <Tabs.Screen
         name="book/[shopId]"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="pay/[bookingId]"
         options={{
           href: null,
         }}

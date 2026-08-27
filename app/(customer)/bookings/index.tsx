@@ -93,7 +93,13 @@ export default function MyBookingsScreen() {
               <ThemedText type="caption">No bookings yet — book a slot from a shop&apos;s page.</ThemedText>
             </View>
           }
-          renderItem={({ item }) => <BookingCard booking={item} variant="customer" />}
+          renderItem={({ item }) => (
+            <BookingCard
+              booking={item}
+              variant="customer"
+              onPayNow={() => router.push(`/pay/${item.id}`)}
+            />
+          )}
         />
       )}
     </Screen>

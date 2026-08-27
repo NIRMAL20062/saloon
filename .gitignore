@@ -42,3 +42,8 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Supabase CLI's local cache/link state (project ref, service version pins,
+# etc.) — regenerated per-machine by `supabase link`/`db push`, not part of
+# the actual project schema. Never meant to be version-controlled.
+supabase/.temp/

@@ -12,7 +12,7 @@
  * a replacement for the DB-level guarantee.
  */
 
-export type BookingStatus = 'draft' | 'awaiting_shop' | 'confirmed' | 'rejected' | 'expired';
+export type BookingStatus = 'draft' | 'awaiting_shop' | 'payment_pending' | 'confirmed' | 'rejected' | 'expired';
 
 // Phase 4 tuning constants (CLAUDE.md Section 13's ground-reality backlog
 // calls these "confirm with the builder" — confirmed: 100s response window,
@@ -24,14 +24,17 @@ export const SHOP_RESPONSE_SECONDS = 100;
 export const BOOKING_BUFFER_MINUTES = 5;
 
 /**
- * The only valid forward transitions for a Phase 4 slot booking. `confirmed`/
- * `rejected`/`expired` are terminal *for this phase* — Phase 6 adds
- * `customer_arrived` etc. on top of `confirmed`, which will extend this map
- * then, not now (CLAUDE.md Section 2, rule 9).
+ * The only valid forward transitions for a slot booking. As of Phase 5, a
+ * shop accepting moves a booking to `payment_pending`, not straight to
+ * `confirmed` — only a captured payment (the Razorpay webhook) can do that.
+ * `confirmed`/`rejected`/`expired` are terminal *for this phase* — Phase 6
+ * adds `customer_arrived` etc. on top of `confirmed`, which will extend this
+ * map then, not now (CLAUDE.md Section 2, rule 9).
  */
 const VALID_TRANSITIONS: Record<BookingStatus, BookingStatus[]> = {
   draft: ['awaiting_shop'],
-  awaiting_shop: ['confirmed', 'rejected', 'expired'],
+  awaiting_shop: ['payment_pending', 'rejected', 'expired'],
+  payment_pending: ['confirmed', 'expired'],
   confirmed: [],
   rejected: [],
   expired: [],
