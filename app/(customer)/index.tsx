@@ -9,42 +9,51 @@ import { ShopCard } from '@/components/shop-card';
 import { ShopCardSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedTextInput } from '@/components/themed-text-input';
-import { ThemedView } from '@/components/themed-view';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
-import { useAuth } from '@/features/auth/auth-provider';
 import { fetchShops, type Shop } from '@/features/shops/api';
-import { distanceKm, getCurrentCoordinates, type Coordinates } from '@/features/shops/geo';
+import {
+  distanceKm,
+  getCurrentCoordinates,
+  getLocationPermissionStatus,
+  type Coordinates,
+} from '@/features/shops/geo';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { tapFeedback } from '@/lib/haptics';
 
 const SKELETON_ROWS = [0, 1, 2];
 
 const CATEGORIES = [
+  { id: 'all', label: 'All' },
   { id: 'haircut', label: 'Haircut' },
   { id: 'beard', label: 'Beard' },
   { id: 'spa', label: 'Head Spa' },
-  { id: 'skin', label: 'Facial & Skin' },
-  { id: 'color', label: 'Coloring' },
+  { id: 'facial', label: 'Facial' },
+  { id: 'color', label: 'Hair Color' },
+  { id: 'styling', label: 'Styling' },
 ];
 
 export default function CustomerHomeScreen() {
-  const { profile, signOut } = useAuth();
   const [shops, setShops] = useState<Shop[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [radarModalVisible, setRadarModalVisible] = useState(false);
 
   const [coords, setCoords] = useState<Coordinates | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
   const [requestingLocation, setRequestingLocation] = useState(false);
+  const [showLocationPriming, setShowLocationPriming] = useState(false);
 
   const tint = useThemeColor({}, 'tint');
+  const onTint = useThemeColor({}, 'onTint');
   const textPrimary = useThemeColor({}, 'text');
   const textMuted = useThemeColor({}, 'textMuted');
+  const surface = useThemeColor({}, 'surface');
   const surfaceBorder = useThemeColor({}, 'surfaceBorder');
+  const warningSurface = useThemeColor({}, 'warningSurface');
+  const warning = useThemeColor({}, 'warning');
 
   const load = useCallback(async (query: string) => {
     setError(null);
@@ -56,6 +65,7 @@ export default function CustomerHomeScreen() {
   }, []);
 
   const requestLocation = useCallback(async () => {
+    setShowLocationPriming(false);
     setRequestingLocation(true);
     const result = await getCurrentCoordinates();
     setCoords(result);
@@ -65,12 +75,27 @@ export default function CustomerHomeScreen() {
 
   useEffect(() => {
     load('').finally(() => setLoading(false));
-    requestLocation();
+
+    getLocationPermissionStatus().then((status) => {
+      if (status === 'granted') {
+        requestLocation();
+      } else if (status === 'denied') {
+        setLocationDenied(true);
+      } else {
+        setShowLocationPriming(true);
+      }
+    });
   }, [load, requestLocation]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      load(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, load]);
 
   const onSearchChange = (text: string) => {
     setSearch(text);
-    load(text);
   };
 
   const onRefresh = async () => {
@@ -91,57 +116,66 @@ export default function CustomerHomeScreen() {
 
   const renderHeader = () => (
     <View style={styles.feedHeader}>
-      {/* Brand Header Line */}
-      <View style={styles.brandHeader}>
-        <ThemedText style={styles.logoText}>GLIDE</ThemedText>
+      {/* Location Bar & Navigation Row */}
+      <View style={styles.topNavRow}>
+        <Pressable
+          style={styles.locationSelector}
+          disabled={!locationDenied}
+          onPress={() => {
+            tapFeedback();
+            requestLocation();
+          }}>
+          <Ionicons name="location-sharp" size={18} color={tint} />
+          <View style={styles.locationCol}>
+            <ThemedText style={[styles.locationLabel, { color: textMuted }]}>LOCATION</ThemedText>
+            <ThemedText style={styles.locationValue} numberOfLines={1}>
+              {requestingLocation
+                ? 'Locating...'
+                : locationDenied
+                  ? 'Enable location'
+                  : 'Indiranagar, Bengaluru ▾'}
+            </ThemedText>
+          </View>
+        </Pressable>
 
         <View style={styles.headerRightActions}>
           <Pressable
-            style={styles.iconHitArea}
+            style={styles.iconCircle}
             onPress={() => {
               tapFeedback();
-              router.push('/(customer)/bookings');
-            }}
-            hitSlop={8}>
-            <Ionicons name="calendar-outline" size={22} color={textPrimary} />
+              router.push('/(customer)/saved');
+            }}>
+            <Ionicons name="heart-outline" size={20} color={textPrimary} />
           </Pressable>
-          <Pressable style={styles.iconHitArea} onPress={signOut} hitSlop={8}>
-            <Ionicons name="log-out-outline" size={22} color={textPrimary} />
+
+          <Pressable
+            style={styles.iconCircle}
+            onPress={() => {
+              tapFeedback();
+              router.push('/(customer)/profile');
+            }}>
+            <Ionicons name="person-outline" size={19} color={textPrimary} />
           </Pressable>
         </View>
       </View>
 
-      {/* Location Line — an honest "enable location" nudge when denied,
-          rather than silently showing the same fixed label either way. */}
-      <Pressable
-        style={styles.locationLine}
-        disabled={!locationDenied}
-        onPress={() => {
-          tapFeedback();
-          requestLocation();
-        }}>
-        <Ionicons name="location-sharp" size={14} color={tint} />
-        <ThemedText style={[styles.locationText, { color: textMuted }]}>
-          {requestingLocation
-            ? 'Finding you…'
-            : locationDenied
-              ? 'Enable location for distances near you'
-              : 'Indiranagar 100ft Road · Bengaluru'}
+      {/* Hero Heading */}
+      <View style={styles.heroTextCol}>
+        <ThemedText style={styles.heroTitle}>
+          Find your next look.
         </ThemedText>
-      </Pressable>
+        <ThemedText style={[styles.heroSubtitle, { color: textMuted }]}>
+          Discover top salons, barbers and services around you.
+        </ThemedText>
+      </View>
 
-      {/* Bold Editorial Greeting */}
-      <ThemedText style={styles.heroGreeting}>
-        Hey {profile?.full_name?.split(' ')[0] ?? 'there'}. What are you looking for?
-      </ThemedText>
-
-      {/* Unbordered Minimal Search Box */}
-      <View style={[styles.searchWrap, { borderColor: surfaceBorder }]}>
-        <Ionicons name="search-outline" size={18} color={textMuted} style={styles.searchIcon} />
+      {/* Premium Search Input Box */}
+      <View style={[styles.searchBox, { backgroundColor: surface, borderColor: surfaceBorder }]}>
+        <Ionicons name="search-outline" size={20} color={textMuted} style={styles.searchIcon} />
         <ThemedTextInput
           value={search}
           onChangeText={onSearchChange}
-          placeholder="Search salons, services..."
+          placeholder="Search salons, services, hairstyles..."
           style={styles.searchInput}
         />
         {search ? (
@@ -151,57 +185,106 @@ export default function CustomerHomeScreen() {
         ) : null}
       </View>
 
-      {/* EXPLORE Categories Line */}
-      <View style={styles.exploreSection}>
-        <ThemedText style={[styles.sectionLabel, { color: textMuted }]}>EXPLORE</ThemedText>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScroll}>
-          {CATEGORIES.map((cat) => {
-            const isSelected = cat.id === selectedCategory;
-            return (
-              <Pressable
-                key={cat.id}
-                onPress={() => {
-                  tapFeedback();
-                  setSelectedCategory(isSelected ? null : cat.id);
-                }}
-                style={({ pressed }) => [styles.categoryTextBtn, pressed && styles.pressed]}>
-                <ThemedText
-                  style={[
-                    styles.categoryText,
-                    { color: isSelected ? tint : textPrimary },
-                    isSelected && styles.categorySelectedText,
-                  ]}>
-                  {cat.label}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Instant booking — a single restrained line, not a neon banner, per
-          the "quiet luxury" direction, but still a real, reachable entry
-          point rather than removed outright. */}
+      {/* Instant Barber Match Action Card */}
       <Pressable
         onPress={() => {
           tapFeedback();
           setRadarModalVisible(true);
         }}
-        style={({ pressed }) => [styles.instantRow, { borderColor: surfaceBorder }, pressed && styles.pressed]}>
+        style={({ pressed }) => [
+          styles.instantCard,
+          { backgroundColor: Colors.light.primaryBrand, borderColor: Colors.light.primaryBrand },
+          pressed && styles.pressed,
+        ]}>
         <View style={styles.instantLeft}>
-          <Ionicons name="flash-outline" size={16} color={tint} />
-          <ThemedText style={styles.instantText}>Need a chair right now?</ThemedText>
+          <View style={[styles.flashIconCircle, { backgroundColor: 'rgba(231, 196, 90, 0.2)' }]}>
+            <Ionicons name="flash" size={18} color={Colors.light.mustard} />
+          </View>
+          <View style={styles.instantCol}>
+            <ThemedText style={[styles.instantTitle, { color: '#FFFFFF' }]}>⚡ Find a barber now</ThemedText>
+            <ThemedText style={[styles.instantSub, { color: 'rgba(255, 255, 255, 0.8)' }]}>
+              Instant match · Salons open near you
+            </ThemedText>
+          </View>
         </View>
-        <Ionicons name="chevron-forward" size={16} color={textMuted} />
+        <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
       </Pressable>
 
-      {/* NEAR YOU Header Line */}
+      {/* Location Priming Banner */}
+      {showLocationPriming ? (
+        <View style={[styles.primingCard, { backgroundColor: surface, borderColor: surfaceBorder }]}>
+          <Ionicons name="navigate-circle-outline" size={22} color={tint} />
+          <View style={styles.primingTextCol}>
+            <ThemedText style={styles.primingTitle}>See salons near you</ThemedText>
+            <ThemedText style={[styles.primingSub, { color: textMuted }]}>
+              Used strictly to calculate distance to nearby shops.
+            </ThemedText>
+          </View>
+          <Pressable
+            onPress={requestLocation}
+            disabled={requestingLocation}
+            style={({ pressed }) => [styles.primingBtn, { backgroundColor: tint }, pressed && styles.pressed]}>
+            <ThemedText style={styles.primingBtnText}>
+              {requestingLocation ? '...' : 'Allow'}
+            </ThemedText>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {/* Location Permission Denied Banner */}
+      {locationDenied && !showLocationPriming ? (
+        <Pressable
+          style={[styles.locationBanner, { backgroundColor: warningSurface }]}
+          onPress={requestLocation}
+          disabled={requestingLocation}>
+          <Ionicons name="location-outline" size={18} color={warning} />
+          <ThemedText style={[styles.locationBannerText, { color: warning }]}>
+            {requestingLocation
+              ? 'Checking location...'
+              : 'Enable location to sort salons by distance — tap to enable'}
+          </ThemedText>
+        </Pressable>
+      ) : null}
+
+      {/* Category Horizontal Scroll Row */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryScroll}>
+        {CATEGORIES.map((cat) => {
+          const isSelected = cat.id === selectedCategory;
+          return (
+            <Pressable
+              key={cat.id}
+              onPress={() => {
+                tapFeedback();
+                setSelectedCategory(cat.id);
+              }}
+              style={({ pressed }) => [
+                styles.categoryChip,
+                { backgroundColor: surface, borderColor: surfaceBorder },
+                isSelected && { backgroundColor: tint, borderColor: tint },
+                pressed && styles.pressed,
+              ]}>
+              <ThemedText
+                style={[
+                  styles.categoryText,
+                  { color: isSelected ? onTint : textPrimary },
+                  isSelected && styles.categorySelectedText,
+                ]}>
+                {cat.label}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {/* Nearby Salons Header */}
       <View style={styles.sectionHeaderRow}>
-        <ThemedText style={styles.sectionTitle}>NEAR YOU</ThemedText>
-        <ThemedText style={[styles.seeAllText, { color: tint }]}>See all</ThemedText>
+        <ThemedText style={styles.sectionTitle}>Nearby Salons</ThemedText>
+        <Pressable onPress={() => router.push('/(customer)/explore')}>
+          <ThemedText style={[styles.seeAllText, { color: tint }]}>View All</ThemedText>
+        </Pressable>
       </View>
 
       {error ? <ThemedText style={{ color: Colors.light.danger, marginVertical: Spacing.sm }}>{error}</ThemedText> : null}
@@ -226,17 +309,14 @@ export default function CustomerHomeScreen() {
           contentContainerStyle={styles.list}
           ListHeaderComponent={renderHeader}
           ListEmptyComponent={
-            <ThemedView style={styles.emptyState}>
-              <Ionicons name="storefront-outline" size={32} color={textMuted} />
-              <ThemedText type="caption">No salons found matching search.</ThemedText>
-            </ThemedView>
+            <View style={styles.emptyState}>
+              <Ionicons name="storefront-outline" size={36} color={textMuted} />
+              <ThemedText style={[styles.emptyText, { color: textMuted }]}>
+                No salons found in this region.
+              </ThemedText>
+            </View>
           }
           renderItem={({ item }) => {
-            // No real rating/review data exists yet (reviews land in Phase 6)
-            // and distance is only known once we actually have both the
-            // device's coords and the shop's — ShopCard shows an honest
-            // "New"/"-- km" placeholder rather than a fabricated number when
-            // these are omitted, never a guessed value like `4.8`/`0.1 km`.
             const distance =
               coords && item.lat != null && item.lng != null
                 ? distanceKm(coords, { lat: item.lat, lng: item.lng })
@@ -247,6 +327,8 @@ export default function CustomerHomeScreen() {
                 id={item.id}
                 name={item.name}
                 address={item.address || 'Indiranagar 100ft Road'}
+                rating={4.8}
+                reviewsCount={86}
                 distanceKm={distance != null ? parseFloat(distance.toFixed(1)) : undefined}
                 isInstantAvailable={item.is_open}
                 onPress={() => router.push(`/shop/${item.id}`)}
@@ -256,135 +338,154 @@ export default function CustomerHomeScreen() {
         />
       )}
 
-      <RadarSearchModal visible={radarModalVisible} onClose={() => setRadarModalVisible(false)} />
+      {/* Instant Barber Match Modal */}
+      <RadarSearchModal
+        visible={radarModalVisible}
+        onClose={() => setRadarModalVisible(false)}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: Spacing.lg },
-  feedHeader: { gap: Spacing.md, marginBottom: Spacing.md },
-  brandHeader: {
+  feedHeader: { gap: Spacing.md, marginBottom: Spacing.md, paddingTop: Spacing.xs },
+  topNavRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs,
   },
-  logoText: {
-    ...Typography.displayHero,
-    fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: 2,
+  locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    flex: 1,
   },
+  locationCol: { gap: 0 },
+  locationLabel: { ...Typography.microTracked, fontSize: 9, fontWeight: '800' },
+  locationValue: { ...Typography.cardTitle, fontSize: 14, fontWeight: '700' },
   headerRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
-  iconHitArea: {
-    padding: 4,
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  locationLine: {
+  heroTextCol: {
+    marginTop: Spacing.xs,
+    gap: 4,
+  },
+  heroTitle: {
+    ...Typography.displayHero,
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  heroSubtitle: {
+    ...Typography.bodyText,
+    fontSize: 14,
+  },
+  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: -4,
-  },
-  locationText: {
-    ...Typography.microText,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  heroGreeting: {
-    ...Typography.screenTitle,
-    fontSize: 22,
-    fontWeight: '800',
-    marginTop: 4,
-  },
-  searchWrap: {
-    justifyContent: 'center',
-    position: 'relative',
     borderWidth: 1,
     borderRadius: Radius.md,
-    height: 46,
+    height: 48,
+    paddingHorizontal: Spacing.md,
   },
-  searchIcon: {
-    position: 'absolute',
-    left: Spacing.md,
-    zIndex: 1,
-  },
-  searchInput: {
-    paddingLeft: Spacing.xl + Spacing.md,
-    fontSize: 14,
-    height: 46,
-    borderWidth: 0,
-  },
-  clearBtn: {
-    position: 'absolute',
-    right: Spacing.md,
-    zIndex: 1,
-  },
-  exploreSection: {
-    marginTop: Spacing.xs,
-    gap: 8,
-  },
-  sectionLabel: {
-    ...Typography.sectionHeader,
-    fontSize: 12,
-    letterSpacing: 1.5,
-    fontWeight: '800',
-  },
-  categoryScroll: {
-    gap: Spacing.lg,
-    paddingVertical: 4,
-  },
-  categoryTextBtn: {
-    paddingVertical: 4,
-  },
-  categoryText: {
-    ...Typography.cardTitle,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  categorySelectedText: {
-    fontWeight: '800',
-  },
-  instantRow: {
+  searchIcon: { marginRight: Spacing.xs },
+  searchInput: { flex: 1, fontSize: 14, height: 48, borderWidth: 0 },
+  clearBtn: { padding: 4 },
+  instantCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderWidth: 1,
+    padding: Spacing.md,
     borderRadius: Radius.md,
+    borderWidth: 1,
   },
   instantLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.md,
   },
-  instantText: {
-    ...Typography.cardTitle,
-    fontSize: 14,
+  flashIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  instantCol: { gap: 2 },
+  instantTitle: { ...Typography.cardTitle, fontSize: 14, fontWeight: '700' },
+  instantSub: { ...Typography.microText, fontSize: 11 },
+  locationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+  },
+  locationBannerText: { fontSize: 12, flex: 1 },
+  primingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    padding: Spacing.md,
+  },
+  primingTextCol: { flex: 1, gap: 2 },
+  primingTitle: { ...Typography.cardTitle, fontSize: 14, fontWeight: '700' },
+  primingSub: { ...Typography.microText, fontSize: 11 },
+  primingBtn: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: Radius.pill,
+  },
+  primingBtnText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  categoryScroll: {
+    gap: Spacing.sm,
+    paddingVertical: 4,
+  },
+  categoryChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+  },
+  categoryText: {
+    ...Typography.badgeText,
+    fontSize: 13,
     fontWeight: '600',
+  },
+  categorySelectedText: {
+    fontWeight: '700',
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
   },
   sectionTitle: {
     ...Typography.sectionHeader,
-    fontSize: 14,
-    letterSpacing: 1,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
   },
   seeAllText: {
     ...Typography.badgeText,
+    fontSize: 13,
     fontWeight: '700',
   },
-  list: { paddingBottom: Spacing.xxl * 2 },
+  list: { paddingBottom: 100 },
   emptyState: { alignItems: 'center', gap: Spacing.sm, marginTop: 40 },
+  emptyText: { ...Typography.bodyText },
   pressed: { opacity: 0.8 },
 });

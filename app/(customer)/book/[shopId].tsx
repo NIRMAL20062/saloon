@@ -158,25 +158,35 @@ export default function BookSlotScreen() {
           hitSlop={12}>
           <Ionicons name="arrow-back" size={18} color={icon} />
         </Pressable>
-        <ThemedText type="title" style={styles.screenTitle}>
-          Choose a Time
+        <ThemedText style={styles.screenTitle}>
+          Confirm Booking
         </ThemedText>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Booking Summary Card */}
         <Card style={styles.summaryCard}>
           <ThemedText style={styles.shopName}>{shop.name}</ThemedText>
+          
           <View style={styles.summaryRow}>
-            <Ionicons name="person-outline" size={14} color={icon} />
-            <ThemedText style={[styles.summaryText, { color: textMuted }]}>{barber.name}</ThemedText>
+            <Ionicons name="person-outline" size={15} color={tint} />
+            <ThemedText style={[styles.summaryText, { color: textMuted }]}>Barber: </ThemedText>
+            <ThemedText style={styles.summaryValueText}>{barber.name}</ThemedText>
           </View>
+
           <View style={styles.summaryRow}>
-            <Ionicons name="cut-outline" size={14} color={icon} />
-            <ThemedText style={[styles.summaryText, { color: textMuted }]} numberOfLines={1}>
-              {selectedServices.map((s) => s.name).join(', ')} · {totalDurationMin} min
+            <Ionicons name="cut-outline" size={15} color={tint} />
+            <ThemedText style={[styles.summaryText, { color: textMuted }]}>Services: </ThemedText>
+            <ThemedText style={styles.summaryValueText} numberOfLines={1}>
+              {selectedServices.map((s) => s.name).join(', ')}
             </ThemedText>
           </View>
-          <ThemedText style={[styles.totalText, { color: tint }]}>{formatRupees(totalPrice)}</ThemedText>
+
+          <View style={styles.summaryRow}>
+            <Ionicons name="time-outline" size={15} color={tint} />
+            <ThemedText style={[styles.summaryText, { color: textMuted }]}>Duration: </ThemedText>
+            <ThemedText style={styles.summaryValueText}>{totalDurationMin} mins</ThemedText>
+          </View>
         </Card>
 
         {submitError ? (
@@ -186,6 +196,7 @@ export default function BookSlotScreen() {
           </View>
         ) : null}
 
+        {/* Slot Picker */}
         <SlotPicker
           days={days}
           slots={slots}
@@ -201,16 +212,40 @@ export default function BookSlotScreen() {
         {slots.length === 0 ? (
           <View style={styles.noSlotsState}>
             <Ionicons name="calendar-clear-outline" size={28} color={textMuted} />
-            <ThemedText style={{ color: textMuted }}>
+            <ThemedText style={{ color: textMuted, textAlign: 'center' }}>
               {shop.name} isn&apos;t open long enough that day for this booking — try another date.
             </ThemedText>
           </View>
         ) : null}
+
+        {/* Payment Summary & Total Payable Card */}
+        <Card style={styles.paymentCard}>
+          <ThemedText style={styles.paymentCardTitle}>Payment Details</ThemedText>
+          
+          <View style={styles.priceRow}>
+            <ThemedText style={[styles.priceLabel, { color: textMuted }]}>Service Total</ThemedText>
+            <ThemedText style={styles.priceVal}>{formatRupees(totalPrice)}</ThemedText>
+          </View>
+
+          <View style={styles.priceRow}>
+            <ThemedText style={[styles.priceLabel, { color: textMuted }]}>Convenience Fee</ThemedText>
+            <ThemedText style={[styles.priceVal, { color: tint }]}>FREE</ThemedText>
+          </View>
+
+          <View style={[styles.hairline, { backgroundColor: surfaceBorder }]} />
+
+          <View style={styles.priceRow}>
+            <ThemedText style={styles.totalLabelText}>Total Payable</ThemedText>
+            <ThemedText style={[styles.totalPriceText, { color: tint }]}>
+              {formatRupees(totalPrice)}
+            </ThemedText>
+          </View>
+        </Card>
       </ScrollView>
 
       <View style={[styles.footer, { backgroundColor: surface, borderTopColor: surfaceBorder }]}>
         <Button
-          title={selectedSlot ? `Confirm ${selectedSlot.timeLabel}` : 'Select a time slot'}
+          title={selectedSlot ? `Confirm & Book (${selectedSlot.timeLabel})` : 'Select a time slot'}
           onPress={handleConfirm}
           loading={submitting}
           disabled={!selectedSlot}
@@ -241,11 +276,19 @@ const styles = StyleSheet.create({
   },
   screenTitle: { fontSize: 20, fontWeight: '800' },
   scrollContent: { padding: Spacing.lg, paddingBottom: Spacing.xxl * 2, gap: Spacing.md },
-  summaryCard: { gap: 4 },
-  shopName: { fontSize: 17, fontWeight: '800' },
+  summaryCard: { gap: 6, padding: Spacing.md },
+  shopName: { fontSize: 18, fontWeight: '800', marginBottom: 2 },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  summaryText: { fontSize: 13, fontWeight: '500' },
-  totalText: { fontSize: 18, fontWeight: '800', marginTop: 4 },
+  summaryText: { fontSize: 13 },
+  summaryValueText: { fontSize: 13, fontWeight: '700' },
+  paymentCard: { gap: 10, padding: Spacing.md },
+  paymentCardTitle: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  priceLabel: { fontSize: 13 },
+  priceVal: { fontSize: 13, fontWeight: '600' },
+  totalLabelText: { fontSize: 15, fontWeight: '700' },
+  totalPriceText: { fontSize: 18, fontWeight: '800' },
+  hairline: { height: StyleSheet.hairlineWidth, width: '100%' },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -254,9 +297,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
   },
-  noSlotsState: { alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.lg, paddingHorizontal: Spacing.lg },
+  noSlotsState: { alignItems: 'center', gap: Spacing.sm, marginTop: Spacing.md, paddingHorizontal: Spacing.lg },
   footer: {
     padding: Spacing.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
 });
+
