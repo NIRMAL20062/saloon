@@ -1,0 +1,14 @@
+# Per-function settings that should live in the repo, not be remembered as a
+# CLI flag on every deploy.
+#
+# `razorpay-webhook` is called directly by Razorpay — it never carries a
+# Supabase session JWT (Razorpay only sends `X-Razorpay-Signature`), so
+# Supabase's platform-level "every Edge Function requires a valid JWT"
+# gateway rejects it with a 401 before the function's own code (which does
+# its own, real authentication via that signature — see
+# supabase/functions/razorpay-webhook/index.ts) ever runs. Disabling the
+# platform JWT check for this one function is correct and intended: the
+# signature check is the actual authentication for this endpoint, not a
+# missing security control.
+[functions.razorpay-webhook]
+verify_jwt = false
