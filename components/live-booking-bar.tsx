@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
@@ -31,6 +31,28 @@ export function LiveBookingBar({
   const textMuted = useThemeColor({}, 'textMuted');
   const success = useThemeColor({}, 'success');
 
+  // Pulsing animation value
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.4,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseLoop.start();
+    return () => pulseLoop.stop();
+  }, [pulseAnim]);
+
   const handlePress = () => {
     tapFeedback();
     if (onPressDetails) {
@@ -52,7 +74,12 @@ export function LiveBookingBar({
       <View style={styles.contentRow}>
         <View style={styles.statusGroup}>
           <View style={styles.pulseContainer}>
-            <View style={[styles.pulseDot, { backgroundColor: success }]} />
+            <Animated.View
+              style={[
+                styles.pulseDot,
+                { backgroundColor: success, transform: [{ scale: pulseAnim }] },
+              ]}
+            />
           </View>
           <View style={styles.textGroup}>
             <View style={styles.statusHeaderRow}>
@@ -106,7 +133,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: Radius.pill,
-    backgroundColor: 'rgba(85, 214, 138, 0.15)',
+    backgroundColor: 'rgba(35, 132, 91, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },
