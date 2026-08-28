@@ -41,8 +41,17 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: beginError.message }, status);
   }
 
-  const keyId = Deno.env.get('RAZORPAY_KEY_ID')!;
-  const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET')!;
+  // Security_context.md Section 2.C: a missing critical secret must fail
+  // loudly, not silently proceed — `Deno.env.get(...)!` is only a TypeScript
+  // assertion, it does nothing at runtime, so without this check a missing
+  // secret would flow into `btoa("undefined:undefined")` and surface as a
+  // confusing 502 from Razorpay instead of a clear, immediate error here.
+  const keyId = Deno.env.get('RAZORPAY_KEY_ID');
+  const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+  if (!keyId || !keySecret) {
+    console.error('[create-payment-order] Missing RAZORPAY_KEY_ID/RAZORPAY_KEY_SECRET secrets.');
+    return jsonResponse({ error: 'Payments are temporarily unavailable. Please try again later.' }, 500);
+  }
 
   // Reuse an existing, still-open order for this booking rather than
   // creating a second Razorpay order every time a customer re-opens the

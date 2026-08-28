@@ -19,7 +19,20 @@ Deno.serve(async (req) => {
   // (whitespace, key order) and silently break signature verification.
   const rawBody = await req.text();
   const signatureHeader = req.headers.get('x-razorpay-signature');
-  const webhookSecret = Deno.env.get('RAZORPAY_WEBHOOK_SECRET')!;
+
+  // Security_context.md Section 2.C: fail loudly on a missing critical
+  // secret rather than proceeding with an insecure default. `Deno.env.get(
+  // ...)!` is only a TypeScript assertion — at runtime a missing secret would
+  // silently become the literal string "undefined", and every webhook would
+  // then verify against a fixed, guessable HMAC key instead of the real one.
+  // That's a fail-OPEN misconfiguration on the one function whose entire
+  // security model rests on this secret being correct, so it's checked
+  // explicitly before any signature comparison happens.
+  const webhookSecret = Deno.env.get('RAZORPAY_WEBHOOK_SECRET');
+  if (!webhookSecret) {
+    console.error('[razorpay-webhook] Missing RAZORPAY_WEBHOOK_SECRET — refusing to process any webhook.');
+    return jsonResponse({ error: 'Webhook processing is misconfigured.' }, 500);
+  }
 
   const isValid = await verifyRazorpaySignature(rawBody, signatureHeader, webhookSecret);
   if (!isValid) {
