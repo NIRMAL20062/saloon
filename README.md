@@ -52,6 +52,8 @@ GLIDE provides two tailored user experiences within a single unified React Nativ
 - **Services Catalog**: Configure service menu with pricing and duration.
 - **Staff / Barbers**: Add and manage individual barbers and their active availability.
 
+> 🎨 **Design System & Color Guide**: Full dual-role color palettes, typography, and component specifications are documented in [`docs/THEME_AND_ROLES_COLOR_GUIDE.md`](./docs/THEME_AND_ROLES_COLOR_GUIDE.md).
+
 ---
 
 ## ⚡ 3. Why This Tech Stack?
