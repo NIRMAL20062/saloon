@@ -142,6 +142,41 @@ export const Typography = {
   microTracked: { fontSize: 10, fontWeight: '700' as const, lineHeight: 14, letterSpacing: 1 },
 };
 
+/**
+ * Partner App ("Emerald Business Trust") — a fixed, non-adaptive palette per
+ * GLIDE's dual-role design system (docs/THEME_AND_ROLES_COLOR_GUIDE.md,
+ * Section 3). Deliberately separate from `Colors` above rather than a third
+ * key alongside `light`/`dark`: GLIDE does not support dark mode (a standing
+ * product decision, not a gap to fill in later) and the Partner app's
+ * palette is a fixed brand identity per role, not a user-toggleable theme —
+ * so every `app/(partner)/` screen imports directly from here instead of
+ * `useThemeColor`, and this is the one place these hex values are allowed to
+ * live. Per the doc's Section 5 rules: never reuse these inside
+ * `app/(customer)/` (which has its own palette in `Colors` above), and keep
+ * the semantics fixed — emerald for primary/success/open, red for
+ * destructive/error, amber for pending/attention.
+ */
+export const PartnerColors = {
+  background: '#F8FAFC',
+  cardSurface: '#FFFFFF',
+  cardBorder: '#E2E8F0',
+  rowDivider: '#F1F5F9',
+  primary: '#0D7A53',
+  onPrimary: '#FFFFFF',
+  mintSurface: '#EBF5F0',
+  mintBorder: '#D1FAE5',
+  textPrimary: '#111827',
+  textMuted: '#64748B',
+  placeholder: '#94A3B8',
+  pendingAlert: '#F59E0B',
+  pendingAlertSurface: '#FFFBEB',
+  pendingAlertBorder: '#FDE68A',
+  danger: '#EF4444',
+  dangerSurface: '#FFF5F5',
+  dangerBorder: '#FEE2E2',
+  shadow: '#0F172A',
+} as const;
+
 export function withAlpha(hexColor: string, alpha: number): string {
   const clamped = Math.max(0, Math.min(1, alpha));
   const alphaHex = Math.round(clamped * 255)

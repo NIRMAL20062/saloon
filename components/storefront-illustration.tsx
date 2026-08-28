@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { PartnerColors } from '@/constants/theme';
 
 export function StorefrontIllustration({ size = 80 }: { size?: number }) {
   const scale = size / 80;
@@ -66,6 +67,12 @@ export function StorefrontIllustration({ size = 80 }: { size?: number }) {
   );
 }
 
+// The awning/badge emerald and the shared neutrals above come from
+// PartnerColors (constants/theme.ts) so they track the brand color if it
+// ever changes. Everything else below — window glass mint, the dark door
+// green, the chain/handle accents — is a bespoke shade used nowhere else,
+// so it stays local rather than padding the shared token file with
+// one-off decorative values nothing else references.
 const styles = StyleSheet.create({
   container: {
     width: 84,
@@ -89,7 +96,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   stripeDark: {
-    backgroundColor: '#0D7A53',
+    backgroundColor: PartnerColors.primary,
   },
   stripeLight: {
     backgroundColor: '#74C69D',
@@ -105,7 +112,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   scallopDark: {
-    backgroundColor: '#0D7A53',
+    backgroundColor: PartnerColors.primary,
   },
   scallopLight: {
     backgroundColor: '#74C69D',
@@ -113,7 +120,7 @@ const styles = StyleSheet.create({
   building: {
     width: 74,
     height: 48,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: PartnerColors.cardBorder,
     flexDirection: 'row',
     paddingHorizontal: 5,
     paddingTop: 4,
@@ -188,7 +195,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E293B',
   },
   openBadge: {
-    backgroundColor: '#0D7A53',
+    backgroundColor: PartnerColors.primary,
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 3,
@@ -196,7 +203,7 @@ const styles = StyleSheet.create({
     borderColor: '#A7F3D0',
   },
   openText: {
-    color: '#FFFFFF',
+    color: PartnerColors.onPrimary,
     fontSize: 6.5,
     fontWeight: '900',
     letterSpacing: 0.4,

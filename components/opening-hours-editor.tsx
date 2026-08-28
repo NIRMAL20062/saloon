@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { PartnerColors, Spacing } from '@/constants/theme';
 import {
   DAY_KEYS,
   type DayKey,
@@ -20,13 +20,6 @@ const DAY_LABELS: Record<DayKey, string> = {
   sat: 'Saturday',
   sun: 'Sunday',
 };
-
-const EMERALD_PRIMARY = '#0D7A53';
-const TEXT_DARK = '#111827';
-const TEXT_MUTED = '#64748B';
-const BORDER_COLOR = '#E2E8F0';
-const ROW_DIVIDER = '#F1F5F9';
-const DANGER_COLOR = '#EF4444';
 
 export function OpeningHoursEditor({
   value,
@@ -55,7 +48,7 @@ export function OpeningHoursEditor({
             key={day}
             style={[
               styles.dayCard,
-              i > 0 && { borderTopWidth: 1, borderTopColor: ROW_DIVIDER },
+              i > 0 && { borderTopWidth: 1, borderTopColor: PartnerColors.rowDivider },
             ]}>
             {/* Top row: Day Name & Toggle */}
             <View style={styles.dayHeaderRow}>
@@ -67,8 +60,8 @@ export function OpeningHoursEditor({
                   successFeedback();
                   patchDay(day, { closed: !open });
                 }}
-                trackColor={{ false: '#E2E8F0', true: EMERALD_PRIMARY }}
-                thumbColor="#FFFFFF"
+                trackColor={{ false: PartnerColors.cardBorder, true: PartnerColors.primary }}
+                thumbColor={PartnerColors.onPrimary}
               />
             </View>
 
@@ -76,41 +69,41 @@ export function OpeningHoursEditor({
             {isOpen ? (
               <View style={styles.timeDetailsRow}>
                 <View style={styles.regularHoursBadge}>
-                  <Ionicons name="calendar-outline" size={13} color={TEXT_MUTED} />
+                  <Ionicons name="calendar-outline" size={13} color={PartnerColors.textMuted} />
                   <ThemedText style={styles.regularHoursText}>Regular hours</ThemedText>
                 </View>
 
                 <View style={styles.timePickersRow}>
                   {/* Start time pill */}
                   <View style={[styles.timePill, error && styles.timePillError]}>
-                    <Ionicons name="time-outline" size={13} color={TEXT_MUTED} />
+                    <Ionicons name="time-outline" size={13} color={PartnerColors.textMuted} />
                     <TextInput
                       value={hours.open}
                       onChangeText={(open) => patchDay(day, { open })}
                       placeholder="09:00"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={PartnerColors.placeholder}
                       editable={!disabled}
                       maxLength={5}
                       style={styles.timeInput}
                     />
-                    <Ionicons name="chevron-down" size={13} color={TEXT_MUTED} />
+                    <Ionicons name="chevron-down" size={13} color={PartnerColors.textMuted} />
                   </View>
 
                   <ThemedText style={styles.toText}>to</ThemedText>
 
                   {/* End time pill */}
                   <View style={[styles.timePill, error && styles.timePillError]}>
-                    <Ionicons name="time-outline" size={13} color={TEXT_MUTED} />
+                    <Ionicons name="time-outline" size={13} color={PartnerColors.textMuted} />
                     <TextInput
                       value={hours.close}
                       onChangeText={(close) => patchDay(day, { close })}
                       placeholder="20:00"
-                      placeholderTextColor="#94A3B8"
+                      placeholderTextColor={PartnerColors.placeholder}
                       editable={!disabled}
                       maxLength={5}
                       style={styles.timeInput}
                     />
-                    <Ionicons name="chevron-down" size={13} color={TEXT_MUTED} />
+                    <Ionicons name="chevron-down" size={13} color={PartnerColors.textMuted} />
                   </View>
                 </View>
               </View>
@@ -145,7 +138,7 @@ const styles = StyleSheet.create({
   dayName: {
     fontSize: 15,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
   },
   timeDetailsRow: {
     flexDirection: 'row',
@@ -161,7 +154,7 @@ const styles = StyleSheet.create({
   },
   regularHoursText: {
     fontSize: 13,
-    color: TEXT_MUTED,
+    color: PartnerColors.textMuted,
     fontWeight: '500',
   },
   timePickersRow: {
@@ -172,28 +165,28 @@ const styles = StyleSheet.create({
   timePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: PartnerColors.cardSurface,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: PartnerColors.cardBorder,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 5,
     gap: 4,
   },
   timePillError: {
-    borderColor: DANGER_COLOR,
+    borderColor: PartnerColors.danger,
   },
   timeInput: {
     fontSize: 13.5,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
     width: 44,
     textAlign: 'center',
     padding: 0,
   },
   toText: {
     fontSize: 13,
-    color: TEXT_MUTED,
+    color: PartnerColors.textMuted,
     fontWeight: '500',
   },
   closedRow: {
@@ -202,12 +195,12 @@ const styles = StyleSheet.create({
   closedText: {
     fontSize: 13,
     fontStyle: 'italic',
-    color: '#94A3B8',
+    color: PartnerColors.placeholder,
   },
   errorText: {
     fontSize: 11,
     fontWeight: '600',
-    color: DANGER_COLOR,
+    color: PartnerColors.danger,
     marginTop: 2,
   },
 });

@@ -15,7 +15,7 @@ import { OpeningHoursEditor } from '@/components/opening-hours-editor';
 import { QrScannerModal } from '@/components/qr-scanner-modal';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { PartnerColors, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/features/auth/auth-provider';
 import { countPendingBookings, expireStaleBookings } from '@/features/bookings/api';
 import { getCurrentCoordinates, type Coordinates } from '@/features/shops/geo';
@@ -30,20 +30,7 @@ import {
   type OpeningHours,
   type OwnShop,
 } from '@/features/shops/partner-api';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { successFeedback, tapFeedback } from '@/lib/haptics';
-
-// Color tokens strictly aligned with docs/THEME_AND_ROLES_COLOR_GUIDE.md
-const EMERALD_PRIMARY = '#0D7A53';
-const MINT_SURFACE = '#EBF5F0';
-const MINT_BORDER = '#D1FAE5';
-const CARD_BG = '#FFFFFF';
-const BORDER_COLOR = '#E2E8F0';
-const TEXT_DARK = '#111827';
-const TEXT_MUTED = '#64748B';
-const DANGER_RED = '#EF4444';
-const DANGER_SURFACE = '#FFF5F5';
-const DANGER_BORDER = '#FEE2E2';
 
 export default function PartnerHomeScreen() {
   const { profile, signOut } = useAuth();
@@ -68,9 +55,6 @@ export default function PartnerHomeScreen() {
   const hoursErrors = validateOpeningHours(hours);
 
   const [pendingBookings, setPendingBookings] = useState(0);
-
-  const danger = useThemeColor({}, 'danger');
-  const warning = useThemeColor({}, 'warning');
 
   const load = useCallback(async () => {
     if (!profile) return;
@@ -182,7 +166,7 @@ export default function PartnerHomeScreen() {
   if (loading) {
     return (
       <Screen style={styles.center}>
-        <ActivityIndicator size="large" color={EMERALD_PRIMARY} />
+        <ActivityIndicator size="large" color={PartnerColors.primary} />
       </Screen>
     );
   }
@@ -190,12 +174,12 @@ export default function PartnerHomeScreen() {
   return (
     <Screen style={styles.screen}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        {error ? <ThemedText style={[styles.errorBanner, { color: danger }]}>{error}</ThemedText> : null}
+        {error ? <ThemedText style={[styles.errorBanner, { color: PartnerColors.danger }]}>{error}</ThemedText> : null}
 
         {shop && shop.status === 'pending' ? (
           <View style={styles.pendingCard}>
-            <Ionicons name="information-circle-outline" size={18} color={warning} />
-            <ThemedText style={[styles.pendingApprovalText, { color: warning }]}>
+            <Ionicons name="information-circle-outline" size={18} color={PartnerColors.pendingAlert} />
+            <ThemedText style={[styles.pendingApprovalText, { color: PartnerColors.pendingAlert }]}>
               Pending approval — not visible to customers yet
             </ThemedText>
           </View>
@@ -207,7 +191,7 @@ export default function PartnerHomeScreen() {
             <View style={styles.topHeader}>
               <View style={styles.headerLeftGroup}>
                 <View style={styles.menuIconBox}>
-                  <Ionicons name="menu-outline" size={22} color={TEXT_DARK} />
+                  <Ionicons name="menu-outline" size={22} color={PartnerColors.textPrimary} />
                 </View>
                 <View style={styles.headerTextCol}>
                   <ThemedText style={styles.brandTitle}>GLIDE PARTNER</ThemedText>
@@ -220,13 +204,13 @@ export default function PartnerHomeScreen() {
                 <View
                   style={[
                     styles.statusDot,
-                    { backgroundColor: shop.is_open ? EMERALD_PRIMARY : '#94A3B8' },
+                    { backgroundColor: shop.is_open ? PartnerColors.primary : PartnerColors.placeholder },
                   ]}
                 />
                 <ThemedText
                   style={[
                     styles.statusPillLabel,
-                    { color: shop.is_open ? EMERALD_PRIMARY : '#64748B' },
+                    { color: shop.is_open ? PartnerColors.primary : PartnerColors.textMuted },
                   ]}>
                   {shop.is_open ? 'OPEN' : 'PAUSED'}
                 </ThemedText>
@@ -237,8 +221,8 @@ export default function PartnerHomeScreen() {
                     handleToggleOpen(val);
                   }}
                   disabled={togglingOpen}
-                  trackColor={{ false: '#E2E8F0', true: EMERALD_PRIMARY }}
-                  thumbColor="#FFFFFF"
+                  trackColor={{ false: PartnerColors.cardBorder, true: PartnerColors.primary }}
+                  thumbColor={PartnerColors.onPrimary}
                   style={styles.switchCompact}
                 />
               </View>
@@ -250,7 +234,7 @@ export default function PartnerHomeScreen() {
                 onPress={() => tapFeedback()}
                 style={({ pressed }) => [styles.incomingCard, pressed && styles.pressed]}>
                 <View style={styles.iconSquircle}>
-                  <Ionicons name="calendar-outline" size={20} color={EMERALD_PRIMARY} />
+                  <Ionicons name="calendar-outline" size={20} color={PartnerColors.primary} />
                 </View>
                 <View style={styles.incomingContent}>
                   <ThemedText style={styles.sectionSmallHeading}>INCOMING BOOKINGS</ThemedText>
@@ -265,7 +249,7 @@ export default function PartnerHomeScreen() {
                     <ThemedText style={styles.pendingCountText}>{pendingBookings}</ThemedText>
                   </View>
                 ) : null}
-                <Ionicons name="chevron-forward" size={18} color={TEXT_MUTED} />
+                <Ionicons name="chevron-forward" size={18} color={PartnerColors.textMuted} />
               </Pressable>
             </Link>
 
@@ -281,11 +265,11 @@ export default function PartnerHomeScreen() {
                   }}
                   style={({ pressed }) => [styles.quickActionColumnCard, pressed && styles.pressed]}>
                   <View style={styles.quickActionIconBox}>
-                    <Ionicons name="qr-code-outline" size={22} color={EMERALD_PRIMARY} />
+                    <Ionicons name="qr-code-outline" size={22} color={PartnerColors.primary} />
                   </View>
                   <ThemedText style={styles.quickActionTitle}>Scan Customer{'\n'}QR Code</ThemedText>
                   <View style={styles.quickActionMiniArrow}>
-                    <Ionicons name="chevron-forward" size={13} color={TEXT_MUTED} />
+                    <Ionicons name="chevron-forward" size={13} color={PartnerColors.textMuted} />
                   </View>
                 </Pressable>
 
@@ -295,11 +279,11 @@ export default function PartnerHomeScreen() {
                     onPress={() => tapFeedback()}
                     style={({ pressed }) => [styles.quickActionColumnCard, pressed && styles.pressed]}>
                     <View style={styles.quickActionIconBox}>
-                      <Ionicons name="pricetag-outline" size={22} color={EMERALD_PRIMARY} />
+                      <Ionicons name="pricetag-outline" size={22} color={PartnerColors.primary} />
                     </View>
                     <ThemedText style={styles.quickActionTitle}>Services &{'\n'}Prices</ThemedText>
                     <View style={styles.quickActionMiniArrow}>
-                      <Ionicons name="chevron-forward" size={13} color={TEXT_MUTED} />
+                      <Ionicons name="chevron-forward" size={13} color={PartnerColors.textMuted} />
                     </View>
                   </Pressable>
                 </Link>
@@ -310,11 +294,11 @@ export default function PartnerHomeScreen() {
                     onPress={() => tapFeedback()}
                     style={({ pressed }) => [styles.quickActionColumnCard, pressed && styles.pressed]}>
                     <View style={styles.quickActionIconBox}>
-                      <Ionicons name="person-outline" size={22} color={EMERALD_PRIMARY} />
+                      <Ionicons name="person-outline" size={22} color={PartnerColors.primary} />
                     </View>
                     <ThemedText style={styles.quickActionTitle}>Barbers &{'\n'}Stylists</ThemedText>
                     <View style={styles.quickActionMiniArrow}>
-                      <Ionicons name="chevron-forward" size={13} color={TEXT_MUTED} />
+                      <Ionicons name="chevron-forward" size={13} color={PartnerColors.textMuted} />
                     </View>
                   </Pressable>
                 </Link>
@@ -329,31 +313,31 @@ export default function PartnerHomeScreen() {
                 {/* Shop Name Input Row */}
                 <View style={styles.profileFieldCard}>
                   <View style={styles.profileFieldIconBox}>
-                    <Ionicons name="storefront-outline" size={18} color={EMERALD_PRIMARY} />
+                    <Ionicons name="storefront-outline" size={18} color={PartnerColors.primary} />
                   </View>
                   <TextInput
                     value={name}
                     onChangeText={setName}
                     placeholder="Shop name"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={PartnerColors.placeholder}
                     style={styles.profileFieldInput}
                   />
-                  <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                  <Ionicons name="chevron-forward" size={18} color={PartnerColors.placeholder} />
                 </View>
 
                 {/* Owner / Address Input Row */}
                 <View style={styles.profileFieldCard}>
                   <View style={styles.profileFieldIconBox}>
-                    <Ionicons name="person-outline" size={18} color={EMERALD_PRIMARY} />
+                    <Ionicons name="person-outline" size={18} color={PartnerColors.primary} />
                   </View>
                   <TextInput
                     value={address}
                     onChangeText={setAddress}
                     placeholder="Address / Details"
-                    placeholderTextColor="#94A3B8"
+                    placeholderTextColor={PartnerColors.placeholder}
                     style={styles.profileFieldInput}
                   />
-                  <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                  <Ionicons name="chevron-forward" size={18} color={PartnerColors.placeholder} />
                 </View>
 
                 {/* Location Action Row */}
@@ -361,7 +345,7 @@ export default function PartnerHomeScreen() {
                   onPress={handleUseCurrentLocation}
                   style={({ pressed }) => [styles.profileFieldCard, pressed && styles.pressed]}>
                   <View style={styles.profileFieldIconBox}>
-                    <Ionicons name="location-outline" size={18} color={EMERALD_PRIMARY} />
+                    <Ionicons name="location-outline" size={18} color={PartnerColors.primary} />
                   </View>
                   <View style={styles.locationContentCol}>
                     <ThemedText style={styles.profileRowMainText}>
@@ -371,7 +355,7 @@ export default function PartnerHomeScreen() {
                       {locationHint ?? (coordinates ? '(tap to refresh)' : 'Use GPS location')}
                     </ThemedText>
                   </View>
-                  <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                  <Ionicons name="chevron-forward" size={18} color={PartnerColors.placeholder} />
                 </Pressable>
               </View>
 
@@ -387,7 +371,7 @@ export default function PartnerHomeScreen() {
                 <Ionicons
                   name={justSaved ? 'checkmark-circle-outline' : 'save-outline'}
                   size={18}
-                  color="#FFFFFF"
+                  color={PartnerColors.onPrimary}
                 />
                 <ThemedText style={styles.saveProfileBtnText}>
                   {saving ? 'SAVING...' : justSaved ? 'SAVED ✓' : 'SAVE PROFILE'}
@@ -404,7 +388,7 @@ export default function PartnerHomeScreen() {
                 }}
                 style={styles.hoursSummaryRow}>
                 <View style={styles.iconSquircle}>
-                  <Ionicons name="time-outline" size={20} color={EMERALD_PRIMARY} />
+                  <Ionicons name="time-outline" size={20} color={PartnerColors.primary} />
                 </View>
                 <View style={styles.incomingContent}>
                   <ThemedText style={styles.sectionSmallHeading}>OPENING HOURS</ThemedText>
@@ -413,7 +397,7 @@ export default function PartnerHomeScreen() {
                 <Ionicons
                   name={hoursExpanded ? 'chevron-up' : 'chevron-forward'}
                   size={18}
-                  color={TEXT_MUTED}
+                  color={PartnerColors.textMuted}
                 />
               </Pressable>
 
@@ -437,7 +421,7 @@ export default function PartnerHomeScreen() {
                     <Ionicons
                       name={hoursSaved ? 'checkmark-circle-outline' : 'time-outline'}
                       size={18}
-                      color="#FFFFFF"
+                      color={PartnerColors.onPrimary}
                     />
                     <ThemedText style={styles.saveProfileBtnText}>
                       {savingHours ? 'SAVING...' : hoursSaved ? 'SAVED ✓' : 'SAVE HOURS'}
@@ -451,7 +435,7 @@ export default function PartnerHomeScreen() {
             <Pressable
               onPress={signOut}
               style={({ pressed }) => [styles.signOutCard, pressed && styles.pressed]}>
-              <Ionicons name="log-out-outline" size={18} color={DANGER_RED} />
+              <Ionicons name="log-out-outline" size={18} color={PartnerColors.danger} />
               <ThemedText style={styles.signOutText}>SIGN OUT</ThemedText>
             </Pressable>
           </View>
@@ -461,7 +445,7 @@ export default function PartnerHomeScreen() {
             <View style={styles.topHeader}>
               <View style={styles.headerLeftGroup}>
                 <View style={styles.menuIconBox}>
-                  <Ionicons name="storefront-outline" size={22} color={EMERALD_PRIMARY} />
+                  <Ionicons name="storefront-outline" size={22} color={PartnerColors.primary} />
                 </View>
                 <View style={styles.headerTextCol}>
                   <ThemedText style={styles.brandTitle}>GLIDE PARTNER</ThemedText>
@@ -479,26 +463,26 @@ export default function PartnerHomeScreen() {
 
               <View style={styles.profileFieldCard}>
                 <View style={styles.profileFieldIconBox}>
-                  <Ionicons name="storefront-outline" size={18} color={EMERALD_PRIMARY} />
+                  <Ionicons name="storefront-outline" size={18} color={PartnerColors.primary} />
                 </View>
                 <TextInput
                   value={name}
                   onChangeText={setName}
                   placeholder="Shop name"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={PartnerColors.placeholder}
                   style={styles.profileFieldInput}
                 />
               </View>
 
               <View style={styles.profileFieldCard}>
                 <View style={styles.profileFieldIconBox}>
-                  <Ionicons name="location-outline" size={18} color={EMERALD_PRIMARY} />
+                  <Ionicons name="location-outline" size={18} color={PartnerColors.primary} />
                 </View>
                 <TextInput
                   value={address}
                   onChangeText={setAddress}
                   placeholder="Shop address"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={PartnerColors.placeholder}
                   style={styles.profileFieldInput}
                 />
               </View>
@@ -507,7 +491,7 @@ export default function PartnerHomeScreen() {
                 onPress={handleUseCurrentLocation}
                 style={({ pressed }) => [styles.profileFieldCard, pressed && styles.pressed]}>
                 <View style={styles.profileFieldIconBox}>
-                  <Ionicons name="navigate-outline" size={18} color={EMERALD_PRIMARY} />
+                  <Ionicons name="navigate-outline" size={18} color={PartnerColors.primary} />
                 </View>
                 <View style={styles.locationContentCol}>
                   <ThemedText style={styles.profileRowMainText}>
@@ -517,7 +501,7 @@ export default function PartnerHomeScreen() {
                     {locationHint ?? 'GPS coordinates for discovery map'}
                   </ThemedText>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                <Ionicons name="chevron-forward" size={18} color={PartnerColors.placeholder} />
               </Pressable>
 
               <Pressable
@@ -528,7 +512,7 @@ export default function PartnerHomeScreen() {
                   (!name.trim() || saving) && styles.disabledButton,
                   pressed && styles.pressed,
                 ]}>
-                <Ionicons name="storefront-outline" size={18} color="#FFFFFF" />
+                <Ionicons name="storefront-outline" size={18} color={PartnerColors.onPrimary} />
                 <ThemedText style={styles.saveProfileBtnText}>
                   {saving ? 'CREATING...' : 'CREATE SHOP'}
                 </ThemedText>
@@ -538,7 +522,7 @@ export default function PartnerHomeScreen() {
             <Pressable
               onPress={signOut}
               style={({ pressed }) => [styles.signOutCard, pressed && styles.pressed]}>
-              <Ionicons name="log-out-outline" size={18} color={DANGER_RED} />
+              <Ionicons name="log-out-outline" size={18} color={PartnerColors.danger} />
               <ThemedText style={styles.signOutText}>SIGN OUT</ThemedText>
             </Pressable>
           </View>
@@ -556,7 +540,7 @@ export default function PartnerHomeScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: PartnerColors.background,
   },
   container: {
     paddingHorizontal: Spacing.lg,
@@ -588,12 +572,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: CARD_BG,
+    backgroundColor: PartnerColors.cardSurface,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: PartnerColors.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#0F172A',
+    shadowColor: PartnerColors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -605,21 +589,21 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
     letterSpacing: 0.5,
   },
   shopNameSub: {
     fontSize: 11,
     fontWeight: '700',
-    color: TEXT_MUTED,
+    color: PartnerColors.textMuted,
     letterSpacing: 0.5,
   },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: MINT_SURFACE,
+    backgroundColor: PartnerColors.mintSurface,
     borderWidth: 1,
-    borderColor: MINT_BORDER,
+    borderColor: PartnerColors.mintBorder,
     borderRadius: 22,
     paddingLeft: 10,
     paddingRight: 4,
@@ -644,13 +628,13 @@ const styles = StyleSheet.create({
   incomingCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: CARD_BG,
+    backgroundColor: PartnerColors.cardSurface,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: PartnerColors.cardBorder,
     borderRadius: Radius.lg,
     padding: 14,
     gap: 12,
-    shadowColor: '#0F172A',
+    shadowColor: PartnerColors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
@@ -660,7 +644,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: MINT_SURFACE,
+    backgroundColor: PartnerColors.mintSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -671,23 +655,23 @@ const styles = StyleSheet.create({
   sectionSmallHeading: {
     fontSize: 11,
     fontWeight: '700',
-    color: TEXT_MUTED,
+    color: PartnerColors.textMuted,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   incomingTitle: {
     fontSize: 14.5,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
   },
   pendingCountBadge: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: PartnerColors.pendingAlert,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 10,
   },
   pendingCountText: {
-    color: '#FFFFFF',
+    color: PartnerColors.onPrimary,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -699,7 +683,7 @@ const styles = StyleSheet.create({
   sectionTrackedHeading: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: TEXT_MUTED,
+    color: PartnerColors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginLeft: 2,
@@ -710,15 +694,15 @@ const styles = StyleSheet.create({
   },
   quickActionColumnCard: {
     flex: 1,
-    backgroundColor: CARD_BG,
+    backgroundColor: PartnerColors.cardSurface,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: PartnerColors.cardBorder,
     borderRadius: 18,
     padding: 12,
     alignItems: 'center',
     justifyContent: 'space-between',
     minHeight: 146,
-    shadowColor: '#0F172A',
+    shadowColor: PartnerColors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
@@ -728,14 +712,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: MINT_SURFACE,
+    backgroundColor: PartnerColors.mintSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   quickActionTitle: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
     textAlign: 'center',
     lineHeight: 16,
   },
@@ -743,9 +727,9 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: PartnerColors.background,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: PartnerColors.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -757,9 +741,9 @@ const styles = StyleSheet.create({
   profileFieldCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: CARD_BG,
+    backgroundColor: PartnerColors.cardSurface,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: PartnerColors.cardBorder,
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -769,7 +753,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: MINT_SURFACE,
+    backgroundColor: PartnerColors.mintSurface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -777,7 +761,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14.5,
     fontWeight: '600',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
     paddingVertical: 2,
   },
   locationContentCol: {
@@ -787,29 +771,29 @@ const styles = StyleSheet.create({
   profileRowMainText: {
     fontSize: 14,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
   },
   profileRowSubText: {
     fontSize: 12,
-    color: TEXT_MUTED,
+    color: PartnerColors.textMuted,
   },
   saveProfileBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#111827', // Ink Noir from user screenshot with emerald badge accents
+    backgroundColor: PartnerColors.textPrimary, // Ink Noir, matches the doc's Partner Text Primary token
     borderRadius: 14,
     paddingVertical: 14,
     gap: 8,
     marginTop: 4,
-    shadowColor: '#111827',
+    shadowColor: PartnerColors.textPrimary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 2,
   },
   saveProfileBtnText: {
-    color: '#FFFFFF',
+    color: PartnerColors.onPrimary,
     fontSize: 13.5,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -817,12 +801,12 @@ const styles = StyleSheet.create({
 
   /* Opening Hours Card */
   hoursCardWrapper: {
-    backgroundColor: CARD_BG,
+    backgroundColor: PartnerColors.cardSurface,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: PartnerColors.cardBorder,
     borderRadius: Radius.lg,
     overflow: 'hidden',
-    shadowColor: '#0F172A',
+    shadowColor: PartnerColors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 4,
@@ -837,19 +821,19 @@ const styles = StyleSheet.create({
   hoursSummaryText: {
     fontSize: 13.5,
     fontWeight: '700',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
   },
   hoursExpandedContent: {
     paddingHorizontal: 16,
     paddingBottom: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: PartnerColors.rowDivider,
   },
   saveHoursBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: EMERALD_PRIMARY,
+    backgroundColor: PartnerColors.primary,
     borderRadius: 12,
     paddingVertical: 12,
     gap: 8,
@@ -861,16 +845,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: DANGER_SURFACE,
+    backgroundColor: PartnerColors.dangerSurface,
     borderWidth: 1,
-    borderColor: DANGER_BORDER,
+    borderColor: PartnerColors.dangerBorder,
     borderRadius: 14,
     paddingVertical: 14,
     gap: 8,
     marginTop: 4,
   },
   signOutText: {
-    color: DANGER_RED,
+    color: PartnerColors.danger,
     fontSize: 13.5,
     fontWeight: '800',
     letterSpacing: 0.8,
@@ -881,9 +865,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   setupCard: {
-    backgroundColor: CARD_BG,
+    backgroundColor: PartnerColors.cardSurface,
     borderWidth: 1,
-    borderColor: BORDER_COLOR,
+    borderColor: PartnerColors.cardBorder,
     borderRadius: 20,
     padding: 20,
     gap: 14,
@@ -891,11 +875,11 @@ const styles = StyleSheet.create({
   setupTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: TEXT_DARK,
+    color: PartnerColors.textPrimary,
   },
   setupSubtitle: {
     fontSize: 13,
-    color: TEXT_MUTED,
+    color: PartnerColors.textMuted,
     lineHeight: 18,
   },
 
@@ -907,9 +891,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FFFBEB',
+    backgroundColor: PartnerColors.pendingAlertSurface,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: PartnerColors.pendingAlertBorder,
     borderRadius: Radius.md,
     padding: 12,
     marginBottom: 10,
