@@ -1,42 +1,68 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Badge, type BadgeTone } from '@/components/badge';
 import { Button } from '@/components/button';
-import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radius } from '@/constants/theme';
 import type { BookingListItem, BookingStatus } from '@/features/bookings/api';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { tapFeedback } from '@/lib/haptics';
 
-const STATUS_LABEL: Record<BookingStatus, string> = {
-  draft: 'Draft',
-  awaiting_shop: 'Awaiting shop response',
-  payment_pending: 'Payment pending',
-  confirmed: 'Confirmed',
-  rejected: 'Rejected',
-  expired: 'Expired',
+const STATUS_CONFIG: Record<
+  BookingStatus,
+  { label: string; color: string; bg: string; stripe: string; iconBg: string }
+> = {
+  draft: { label: 'Draft', color: '#64748B', bg: '#F1F5F9', stripe: '#94A3B8', iconBg: '#F1F5F9' },
+  awaiting_shop: {
+    label: 'Awaiting Shop',
+    color: '#D97706',
+    bg: '#FFFBEB',
+    stripe: '#F59E0B',
+    iconBg: '#FFFBEB',
+  },
+  payment_pending: {
+    label: 'Payment Pending',
+    color: '#D97706',
+    bg: '#FFFBEB',
+    stripe: '#F59E0B',
+    iconBg: '#FFFBEB',
+  },
+  confirmed: {
+    label: 'Confirmed',
+    color: '#059669',
+    bg: '#ECFDF5',
+    stripe: '#10B981',
+    iconBg: '#ECFDF5',
+  },
+  rejected: {
+    label: 'Rejected',
+    color: '#DC2626',
+    bg: '#FEF2F2',
+    stripe: '#EF4444',
+    iconBg: '#FEF2F2',
+  },
+  expired: {
+    label: 'Expired',
+    color: '#EA580C',
+    bg: '#FFF7ED',
+    stripe: '#F97316',
+    iconBg: '#FFF7ED',
+  },
 };
 
-const STATUS_TONE: Record<BookingStatus, BadgeTone> = {
-  draft: 'neutral',
-  awaiting_shop: 'warning',
-  payment_pending: 'warning',
-  confirmed: 'success',
-  rejected: 'danger',
-  expired: 'neutral',
-};
-
-function formatScheduledAt(iso: string): string {
+function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleString(undefined, {
+  return d.toLocaleDateString('en-US', {
     weekday: 'short',
-    month: 'short',
     day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+    month: 'short',
   });
+}
+
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
 }
 
 function formatRupees(paise: number): string {
@@ -59,11 +85,11 @@ function useCountdown(expiresAt: string | null, active: boolean): number {
 
 export interface BookingCardProps {
   booking: BookingListItem;
-  /** Customer view shows the shop and a Pay Now button when awaiting payment; partner view shows the customer and Accept/Reject controls. */
   variant: 'customer' | 'partner';
   onAccept?: () => void;
   onReject?: () => void;
   onPayNow?: () => void;
+  onViewDetails?: () => void;
   accepting?: boolean;
   rejecting?: boolean;
 }
@@ -74,12 +100,11 @@ export function BookingCard({
   onAccept,
   onReject,
   onPayNow,
+  onViewDetails,
   accepting,
   rejecting,
 }: BookingCardProps) {
   const surfaceBorder = useThemeColor({}, 'surfaceBorder');
-  const textMuted = useThemeColor({}, 'textMuted');
-  const icon = useThemeColor({}, 'icon');
   const danger = useThemeColor({}, 'danger');
   const warning = useThemeColor({}, 'warning');
 
@@ -87,9 +112,6 @@ export function BookingCard({
   const isAwaitingPayment = booking.status === 'payment_pending';
   const isCountingDown = isAwaitingShop || isAwaitingPayment;
 
-  // Which timestamp the countdown/progress bar tracks depends on which wait
-  // this booking is actually in — the shop's response window and the
-  // payment window are separate deadlines with separate expiry columns.
   const expiresAt = isAwaitingShop
     ? booking.shop_response_expires_at
     : isAwaitingPayment
@@ -97,133 +119,370 @@ export function BookingCard({
       : null;
   const secondsLeft = useCountdown(expiresAt, isCountingDown);
   const isUrgent = isCountingDown && secondsLeft <= 30;
-  // The full window's length, not a hardcoded constant — derived from the
-  // booking's own timestamps so the progress bar's fill is correct even if
-  // the tuning numbers behind SHOP_RESPONSE_SECONDS/PAYMENT_WINDOW_MINUTES
-  // change. `awaiting_shop`'s window starts at `created_at`; `payment_pending`'s
-  // starts when the shop accepted, which `booking_events` records but this
-  // list view doesn't fetch — falling back to `created_at` there still gives
-  // a reasonable (if slightly generous) fill rather than nothing.
+
   const windowStart = new Date(booking.created_at).getTime();
   const totalWindowSeconds =
     expiresAt != null ? Math.max(1, Math.round((new Date(expiresAt).getTime() - windowStart) / 1000)) : 1;
 
   const serviceNames = booking.booking_services.map((s) => s.services?.name).filter(Boolean).join(', ');
-
-  const title = variant === 'customer' ? booking.shops?.name ?? 'Shop' : booking.profiles?.full_name ?? 'Customer';
+  const title = variant === 'customer' ? booking.shops?.name ?? 'Salon' : booking.profiles?.full_name ?? 'Customer';
   const subtitle = variant === 'customer' ? booking.shops?.address : null;
 
+  const statusConfig = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.draft;
+
   return (
-    <Card style={styles.card}>
-      <View style={styles.headerRow}>
-        <View style={styles.titleCol}>
-          <ThemedText style={styles.title} numberOfLines={1}>
-            {title}
-          </ThemedText>
-          {subtitle ? (
-            <ThemedText style={[styles.subtitle, { color: textMuted }]} numberOfLines={1}>
-              {subtitle}
-            </ThemedText>
-          ) : null}
+    <Pressable
+      onPress={() => {
+        tapFeedback();
+        onViewDetails?.();
+      }}
+      style={({ pressed }) => [styles.cardContainer, pressed && styles.pressed]}>
+      {/* Left Vertical Status Accent Stripe */}
+      <View style={[styles.leftAccentStripe, { backgroundColor: statusConfig.stripe }]} />
+
+      <View style={styles.cardInner}>
+        {/* Top Info Layout */}
+        <View style={styles.topSection}>
+          {/* Left Date / Time Block */}
+          <View style={styles.dateBlock}>
+            <View style={[styles.calendarSquircle, { backgroundColor: statusConfig.iconBg }]}>
+              <Ionicons name="calendar-outline" size={18} color={statusConfig.color} />
+            </View>
+            <View style={styles.dateTextGroup}>
+              <ThemedText style={styles.dateFormattedText}>{formatDate(booking.scheduled_at)}</ThemedText>
+              <ThemedText style={styles.timeFormattedText}>{formatTime(booking.scheduled_at)}</ThemedText>
+            </View>
+          </View>
+
+          {/* Middle & Right Shop, Metadata, and Status Block */}
+          <View style={styles.mainInfoBlock}>
+            <View style={styles.titleAndStatusRow}>
+              <ThemedText style={styles.shopTitle} numberOfLines={1}>
+                {title}
+              </ThemedText>
+
+              <View style={styles.statusPillGroup}>
+                <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
+                  <ThemedText style={[styles.statusBadgeText, { color: statusConfig.color }]}>
+                    {statusConfig.label}
+                  </ThemedText>
+                </View>
+                <Pressable
+                  hitSlop={8}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    tapFeedback();
+                    onViewDetails?.();
+                  }}>
+                  <Ionicons name="ellipsis-vertical" size={16} color="#94A3B8" />
+                </Pressable>
+              </View>
+            </View>
+
+            {subtitle ? (
+              <ThemedText style={styles.addressSubtitle} numberOfLines={1}>
+                {subtitle}
+              </ThemedText>
+            ) : null}
+
+            {/* Barber & Service meta line */}
+            <View style={styles.metaLine}>
+              {booking.barbers?.name ? (
+                <View style={styles.metaItem}>
+                  <Ionicons name="person-outline" size={11} color="#64748B" />
+                  <ThemedText style={styles.metaItemText} numberOfLines={1}>
+                    {booking.barbers.name}
+                  </ThemedText>
+                </View>
+              ) : null}
+
+              {booking.barbers?.name && serviceNames ? (
+                <ThemedText style={styles.metaDivider}>|</ThemedText>
+              ) : null}
+
+              {serviceNames ? (
+                <View style={styles.metaItem}>
+                  <Ionicons name="cut-outline" size={11} color="#64748B" />
+                  <ThemedText style={styles.metaItemText} numberOfLines={1}>
+                    {serviceNames}
+                  </ThemedText>
+                </View>
+              ) : null}
+            </View>
+          </View>
         </View>
-        <Badge label={STATUS_LABEL[booking.status]} tone={STATUS_TONE[booking.status]} dot={isCountingDown} />
-      </View>
 
-      <View style={styles.metaRow}>
-        <Ionicons name="calendar-outline" size={14} color={icon} />
-        <ThemedText style={[styles.metaText, { color: textMuted }]}>{formatScheduledAt(booking.scheduled_at)}</ThemedText>
-      </View>
-
-      {booking.barbers?.name ? (
-        <View style={styles.metaRow}>
-          <Ionicons name="person-outline" size={14} color={icon} />
-          <ThemedText style={[styles.metaText, { color: textMuted }]}>{booking.barbers.name}</ThemedText>
-        </View>
-      ) : null}
-
-      {serviceNames ? (
-        <View style={styles.metaRow}>
-          <Ionicons name="cut-outline" size={14} color={icon} />
-          <ThemedText style={[styles.metaText, { color: textMuted }]} numberOfLines={1}>
-            {serviceNames}
-          </ThemedText>
-        </View>
-      ) : null}
-
-      <View style={styles.footerRow}>
-        <ThemedText style={styles.amount}>{formatRupees(booking.total_amount)}</ThemedText>
-
+        {/* Countdown Timer (if waiting response or payment) */}
         {isCountingDown ? (
-          <View style={styles.countdownRow}>
-            <Ionicons name="time-outline" size={14} color={isUrgent ? danger : warning} />
-            <ThemedText style={[styles.countdownText, { color: isUrgent ? danger : warning }]}>
-              {secondsLeft > 0
-                ? `${secondsLeft}s ${isAwaitingShop ? 'to respond' : 'to pay'}`
-                : 'expiring…'}
-            </ThemedText>
+          <View style={styles.countdownSection}>
+            <View style={styles.countdownRow}>
+              <Ionicons name="time-outline" size={13} color={isUrgent ? danger : warning} />
+              <ThemedText style={[styles.countdownText, { color: isUrgent ? danger : warning }]}>
+                {secondsLeft > 0
+                  ? `${secondsLeft}s ${isAwaitingShop ? 'for shop to accept' : 'to complete payment'}`
+                  : 'expiring…'}
+              </ThemedText>
+            </View>
+            <View style={[styles.progressTrack, { backgroundColor: surfaceBorder }]}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${totalWindowSeconds > 0 ? (secondsLeft / totalWindowSeconds) * 100 : 0}%`,
+                    backgroundColor: isUrgent ? danger : warning,
+                  },
+                ]}
+              />
+            </View>
           </View>
         ) : null}
+
+        {/* Bottom Footer Row: Price & Actions */}
+        <View style={styles.footerRow}>
+          <ThemedText style={styles.priceText}>{formatRupees(booking.total_amount)}</ThemedText>
+
+          {variant === 'customer' ? (
+            isAwaitingPayment ? (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  tapFeedback();
+                  onPayNow?.();
+                }}
+                style={styles.payNowActionBtn}>
+                <Ionicons name="card-outline" size={14} color="#FFFFFF" />
+                <ThemedText style={styles.payNowActionText}>Pay Now</ThemedText>
+                <Ionicons name="chevron-forward" size={14} color="#FFFFFF" />
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  tapFeedback();
+                  onViewDetails?.();
+                }}
+                style={styles.viewDetailsLink}>
+                <ThemedText style={[styles.viewDetailsText, { color: statusConfig.color }]}>
+                  View Details
+                </ThemedText>
+                <Ionicons name="chevron-forward" size={14} color={statusConfig.color} />
+              </Pressable>
+            )
+          ) : null}
+
+          {variant === 'partner' && isAwaitingShop ? (
+            <View style={styles.partnerActionsRow}>
+              <Button
+                title="Reject"
+                variant="danger"
+                onPress={onReject}
+                loading={rejecting}
+                disabled={accepting}
+                style={styles.partnerBtn}
+              />
+              <Button
+                title="Accept"
+                onPress={onAccept}
+                loading={accepting}
+                disabled={rejecting}
+                style={styles.partnerBtn}
+              />
+            </View>
+          ) : null}
+        </View>
       </View>
-
-      {isCountingDown ? (
-        <View style={[styles.progressTrack, { backgroundColor: surfaceBorder }]}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${totalWindowSeconds > 0 ? (secondsLeft / totalWindowSeconds) * 100 : 0}%`, backgroundColor: isUrgent ? danger : warning },
-            ]}
-          />
-        </View>
-      ) : null}
-
-      {variant === 'partner' && isAwaitingShop ? (
-        <View style={styles.actionsRow}>
-          <Button title="Reject" variant="danger" onPress={onReject} loading={rejecting} disabled={accepting} style={styles.actionButton} />
-          <Button title="Accept" onPress={onAccept} loading={accepting} disabled={rejecting} style={styles.actionButton} />
-        </View>
-      ) : null}
-
-      {variant === 'customer' && isAwaitingPayment ? (
-        <Button title="Pay Now" onPress={onPayNow} style={styles.actionsRow} />
-      ) : null}
-
-      {variant === 'customer' && booking.payment_status === 'failed' && isAwaitingPayment ? (
-        <ThemedText style={[styles.retryHint, { color: danger }]}>
-          Last attempt failed — you can try again before the window closes.
-        </ThemedText>
-      ) : null}
-    </Card>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { gap: Spacing.sm },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: Spacing.sm },
-  titleCol: { flex: 1, gap: 2 },
-  title: { fontSize: 16, fontWeight: '800' },
-  subtitle: { fontSize: 12, fontWeight: '500' },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { fontSize: 13, fontWeight: '500' },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: Spacing.xs,
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    position: 'relative',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  amount: { fontSize: 16, fontWeight: '800' },
-  countdownRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  countdownText: { fontSize: 12, fontWeight: '700' },
+  leftAccentStripe: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    borderTopLeftRadius: Radius.lg,
+    borderBottomLeftRadius: Radius.lg,
+    zIndex: 2,
+  },
+  cardInner: {
+    padding: 14,
+    paddingLeft: 16,
+    gap: 10,
+  },
+  topSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  dateBlock: {
+    gap: 4,
+    alignItems: 'flex-start',
+    minWidth: 72,
+  },
+  calendarSquircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  dateTextGroup: {
+    gap: 1,
+  },
+  dateFormattedText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  timeFormattedText: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  mainInfoBlock: {
+    flex: 1,
+    gap: 3,
+  },
+  titleAndStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 6,
+  },
+  shopTitle: {
+    fontSize: 15.5,
+    fontWeight: '800',
+    color: '#111827',
+    flex: 1,
+  },
+  statusPillGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  addressSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  metaLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 2,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    maxWidth: '65%',
+  },
+  metaItemText: {
+    fontSize: 11.5,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  metaDivider: {
+    color: '#CBD5E1',
+    fontSize: 11,
+  },
+  countdownSection: {
+    gap: 4,
+    paddingTop: 4,
+  },
+  countdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  countdownText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
   progressTrack: {
-    height: 4,
+    height: 3,
     borderRadius: 2,
     overflow: 'hidden',
-    marginTop: 2,
+    width: '100%',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 2,
   },
-  actionsRow: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.xs },
-  actionButton: { flex: 1 },
-  retryHint: { fontSize: 12, fontWeight: '600' },
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  priceText: {
+    fontSize: 16.5,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  viewDetailsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  viewDetailsText: {
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  payNowActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#512A45',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 4,
+  },
+  payNowActionText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  partnerActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  partnerBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  pressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.99 }],
+  },
 });
