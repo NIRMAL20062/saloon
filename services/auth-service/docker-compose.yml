@@ -1,0 +1,22 @@
+# Local dev Postgres — NOT usable in the sandbox this service was written
+# in (its Docker daemon rejected all access: "permission denied while trying
+# to connect to the docker API"). This file is written for whoever runs this
+# on a real dev machine or CI runner with working Docker, and is untested
+# here because of that constraint — verify it actually starts and that the
+# migration in src/db/migrations/0001_init.sql applies cleanly against it
+# before trusting this for anything beyond local dev.
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: glide
+      POSTGRES_PASSWORD: glide
+      POSTGRES_DB: glide_auth
+    ports:
+      - '5432:5432'
+    volumes:
+      - glide_auth_pgdata:/var/lib/postgresql/data
+
+volumes:
+  glide_auth_pgdata:
