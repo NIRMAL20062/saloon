@@ -1,5 +1,14 @@
 # GLIDE — Target Architecture (North Star)
 
+> **DECISION (recorded for the team):** After building and fully verifying a working Auth Service on this architecture (Node/Express, real Postgres, 31 passing tests — see git history), the team decided to **pause this track and stay on Supabase + Expo for the MVP.** The reasoning: GLIDE's near-term goal is ~200–300 users, and Supabase's free tier (50,000 MAU, 500MB DB, 500K function invocations/month) comfortably covers that with zero cost — while any version of this target architecture costs real money (roughly $150–400+/month for the full spec) from the moment it's provisioned, regardless of user count. That's not a good trade for a pre-revenue MVP. The working Auth Service code was removed from the repo (it's fully described here and reproducible from this document if needed later); this document and its roadmap companion stay as the plan for **when** the team should revisit this, not **whether** the current stack was a mistake — it wasn't.
+>
+> **The staged path back to this, when the time comes:**
+> 1. **Now (0–500 users): $0/month.** Current Expo + Supabase app. Focus entirely on product-market fit.
+> 2. **Early traction (500–5,000 users): ~$5–25/month.** Upgrade the mobile app via Expo Prebuild/EAS Build (still one codebase) for native camera QR scanning and the native Razorpay SDK; self-host backend services on a single cheap VPS (Hetzner/DigitalOcean, ~$5–10/month) running Postgres + the services in this document via Docker Compose — no Kubernetes, no Kafka yet.
+> 3. **Real scale (10,000+ users), scale-funded.** Only at this point does the full architecture below (native Android + iOS, Kubernetes, Kafka, managed cloud databases) become worth its cost — hire dedicated mobile engineers and build it out as specified.
+>
+> Re-read this status note at the start of any future session that touches this document, so the decision isn't silently forgotten.
+
 > **Status:** This is the long-term architecture GLIDE is migrating *toward*, written for a real, multi-person team — not a solo build. It is **not** what's running today.
 >
 > **What's running today** (Expo/React Native + Supabase + Razorpay, Phases 1–5 complete) **stays in production and keeps shipping features** while this is built out. Nothing already working gets deleted or paused. Migration happens module by module, on the schedule in Section 9, with explicit cutover criteria — never a hard stop-and-rewrite. See `README.md` for what's actually deployed right now, and `CLAUDE.md` for the phase-by-phase build log that got it there; both stay accurate for the current app throughout this migration.
