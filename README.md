@@ -1,4 +1,4 @@
-# GLIDE 💈
+# GLIDE 💈 ,
 
 > **On-Demand Barber & Salon Booking Platform for Android**  
 > Built with Expo SDK 54 (React Native + TypeScript), Supabase (PostgreSQL, RLS, Realtime, Edge Functions), and Razorpay.
