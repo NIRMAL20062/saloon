@@ -1,7 +1,9 @@
-// Dev-only convenience — never wired up outside a __DEV__ build (see
-// app/(auth)/phone.tsx, which only renders the buttons using these when
-// `__DEV__` is true). __DEV__ is false in any EAS/production build, so this
-// cannot ship to the Play Store no matter what.
+// Dev-only convenience — see app/(auth)/phone.tsx's `isDevLoginEnabled`,
+// which renders these buttons when EITHER `__DEV__` is true (Expo Go / a
+// dev-client on Metro) OR `EXPO_PUBLIC_ENABLE_DEV_LOGIN` is "true" (set in
+// eas.json's `development` and `preview` build profiles only — deliberately
+// absent from `production`, so this cannot ship to the Play Store no matter
+// what).
 //
 // These are throwaway Supabase Auth accounts with no real customer data
 // behind them — they exist so testing sign-in doesn't require a real phone

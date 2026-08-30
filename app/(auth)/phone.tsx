@@ -15,6 +15,22 @@ import { isLikelyValidPhone, sendOtp } from '@/features/auth/otp';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { supabase } from '@/lib/supabase/client';
 
+/**
+ * `__DEV__` alone isn't enough here: it's true in Expo Go / a dev-client
+ * connected to Metro, but false in ANY standalone build — including the
+ * "preview" EAS profile, which is exactly what gets installed on a real
+ * phone to test outside of Metro (no laptop needed). Testing a real
+ * installed build was the whole point of getting a preview APK, so gating
+ * this on `__DEV__` alone made the bypass invisible in the one place it's
+ * most needed: testing on a real device without burning a real OTP send
+ * (Twilio's free trial has a hard send limit).
+ *
+ * `EXPO_PUBLIC_ENABLE_DEV_LOGIN` is set to "true" in eas.json's
+ * `development` and `preview` build profiles only — never in `production`,
+ * so a real Play Store release still can't ship this no matter what.
+ */
+const isDevLoginEnabled = __DEV__ || process.env.EXPO_PUBLIC_ENABLE_DEV_LOGIN === 'true';
+
 export default function PhoneScreen() {
   const [phone, setPhone] = useState('+91');
   const [sending, setSending] = useState(false);
@@ -91,7 +107,7 @@ export default function PhoneScreen() {
         <Button title="Get OTP Code →" onPress={onSubmit} loading={sending} style={styles.submitButton} />
       </Card>
 
-      {__DEV__ ? (
+      {isDevLoginEnabled ? (
         <Card style={styles.devCard}>
           <View style={styles.devHeader}>
             <Ionicons name="flash-sharp" size={16} color={tint} />
