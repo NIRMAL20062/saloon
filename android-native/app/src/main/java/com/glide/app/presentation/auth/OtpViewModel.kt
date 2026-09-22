@@ -28,6 +28,12 @@ class OtpViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(code = code, error = null)
     }
 
+    /** Auto-fills from the SMS User Consent API and submits immediately. */
+    fun onCodeAutoDetected(phone: String, code: String) {
+        _uiState.value = _uiState.value.copy(code = code, error = null)
+        verify(phone)
+    }
+
     fun verify(phone: String) {
         val code = _uiState.value.code.trim()
         if (code.length < 4) {

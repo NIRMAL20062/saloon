@@ -48,4 +48,15 @@ class OtpViewModelTest {
 
         assertEquals("invalid or expired code", viewModel.uiState.value.error)
     }
+
+    @Test
+    fun `an auto-detected code fills the field and submits immediately`() = runTest {
+        val repo = FakeAuthRepository()
+        val viewModel = OtpViewModel(repo)
+
+        viewModel.onCodeAutoDetected(phone = "+919876543210", code = "654321")
+
+        assertEquals("654321", viewModel.uiState.value.code)
+        assertEquals(listOf("+919876543210" to "654321"), repo.verifiedCodes)
+    }
 }

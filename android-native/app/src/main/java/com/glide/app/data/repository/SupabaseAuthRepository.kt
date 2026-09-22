@@ -7,6 +7,7 @@ import com.glide.app.domain.repository.AuthRepository
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.OtpType
 import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.providers.builtin.OTP
 import io.github.jan.supabase.auth.status.SessionStatus
 import io.github.jan.supabase.postgrest.postgrest
@@ -32,6 +33,13 @@ class SupabaseAuthRepository @Inject constructor(
 
     override suspend fun verifyOtp(phone: String, token: String) {
         supabase.auth.verifyPhoneOtp(type = OtpType.Phone.SMS, phone = phone, token = token)
+    }
+
+    override suspend fun signInWithPassword(email: String, password: String) {
+        supabase.auth.signInWith(Email) {
+            this.email = email
+            this.password = password
+        }
     }
 
     override suspend fun fetchProfile(userId: String): Profile? =

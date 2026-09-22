@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.glide.app.core.sms.SmsAutoReadEffect
 
 @Composable
 fun OtpScreen(
@@ -23,6 +24,8 @@ fun OtpScreen(
     viewModel: OtpViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    SmsAutoReadEffect { code -> viewModel.onCodeAutoDetected(phone, code) }
 
     Scaffold { innerPadding ->
         Column(
@@ -33,7 +36,10 @@ fun OtpScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text("Verify your number", style = MaterialTheme.typography.headlineMedium)
-            Text("Enter the code sent to $phone", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "Enter the code sent to $phone — we'll auto-fill it if you allow the SMS prompt.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
 
             OutlinedTextField(
                 value = uiState.code,

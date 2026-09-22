@@ -16,6 +16,7 @@ class FakeAuthRepository : AuthRepository {
     var sendOtpError: Throwable? = null
     var verifyOtpError: Throwable? = null
     var createProfileError: Throwable? = null
+    var passwordSignInError: Throwable? = null
     var profileToReturn: Profile? = null
     var userIdToReturn: String? = "user-1"
     var phoneToReturn: String? = "+919876543210"
@@ -23,6 +24,7 @@ class FakeAuthRepository : AuthRepository {
     val sentOtpTo = mutableListOf<String>()
     val verifiedCodes = mutableListOf<Pair<String, String>>()
     val createdProfiles = mutableListOf<Pair<String, UserRole>>()
+    val passwordSignIns = mutableListOf<Pair<String, String>>()
     var signOutCalled = false
 
     fun emit(status: SessionStatus) {
@@ -44,6 +46,11 @@ class FakeAuthRepository : AuthRepository {
     override suspend fun createProfile(userId: String, phone: String?, fullName: String, role: UserRole) {
         createProfileError?.let { throw it }
         createdProfiles += userId to role
+    }
+
+    override suspend fun signInWithPassword(email: String, password: String) {
+        passwordSignInError?.let { throw it }
+        passwordSignIns += email to password
     }
 
     override suspend fun signOut() {

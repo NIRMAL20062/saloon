@@ -10,15 +10,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/** India-only for now — see PhoneEntryScreen's fixed "+91" prefix. */
+const val COUNTRY_CODE = "+91"
+
 data class PhoneEntryUiState(
-    val phone: String = "",
+    val localNumber: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
-    val otpSent: Boolean = false,
+    /** Full E.164 number once an OTP has actually been sent for it. */
+    val otpSentTo: String? = null,
 )
 
-/** Loose E.164 shape check only — Supabase Auth is what actually validates/rate-limits server-side. */
-private val PHONE_REGEX = Regex("^\\+[1-9]\\d{7,14}$")
+private val LOCAL_NUMBER_REGEX = Regex("^\\d{10}$")
 
 @HiltViewModel
 class PhoneEntryViewModel @Inject constructor(
@@ -28,21 +31,24 @@ class PhoneEntryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PhoneEntryUiState())
     val uiState: StateFlow<PhoneEntryUiState> = _uiState.asStateFlow()
 
-    fun onPhoneChanged(phone: String) {
-        _uiState.value = _uiState.value.copy(phone = phone, error = null)
+    /** Digits only, capped at 10 — the user never types a country code. */
+    fun onLocalNumberChanged(raw: String) {
+        val digitsOnly = raw.filter(Char::isDigit).take(10)
+        _uiState.value = _uiState.value.copy(localNumber = digitsOnly, error = null)
     }
 
     fun sendOtp() {
-        val phone = _uiState.value.phone.trim()
-        if (!PHONE_REGEX.matches(phone)) {
-            _uiState.value = _uiState.value.copy(error = "Enter a valid phone number, e.g. +919876543210")
+        val local = _uiState.value.localNumber
+        if (!LOCAL_NUMBER_REGEX.matches(local)) {
+            _uiState.value = _uiState.value.copy(error = "Enter a valid 10-digit mobile number")
             return
         }
+        val fullPhone = COUNTRY_CODE + local
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
-            runCatching { authRepository.sendOtp(phone) }
+            runCatching { authRepository.sendOtp(fullPhone) }
                 .onSuccess {
-                    _uiState.value = _uiState.value.copy(isLoading = false, otpSent = true)
+                    _uiState.value = _uiState.value.copy(isLoading = false, otpSentTo = fullPhone)
                 }
                 .onFailure { e ->
                     _uiState.value = _uiState.value.copy(isLoading = false, error = e.message ?: "Could not send code")
@@ -51,6 +57,22 @@ class PhoneEntryViewModel @Inject constructor(
     }
 
     fun otpSentHandled() {
-        _uiState.value = _uiState.value.copy(otpSent = false)
+        _uiState.value = _uiState.value.copy(otpSentTo = null)
+    }
+
+    /** BuildConfig.DEBUG-gated in the UI — never reachable in a release build. */
+    fun signInWithDevAccount(account: DevAccount) {
+        _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+        viewModelScope.launch {
+            runCatching { authRepository.signInWithPassword(account.email, account.password) }
+                .onSuccess {
+                    // RootViewModel's sessionStatus collector picks this up and routes —
+                    // this screen doesn't navigate itself.
+                    _uiState.value = _uiState.value.copy(isLoading = false)
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = e.message ?: "Dev sign-in failed")
+                }
+        }
     }
 }

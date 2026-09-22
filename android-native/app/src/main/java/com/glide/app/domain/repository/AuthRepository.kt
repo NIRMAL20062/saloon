@@ -14,6 +14,13 @@ interface AuthRepository {
 
     suspend fun sendOtp(phone: String)
     suspend fun verifyOtp(phone: String, token: String)
+
+    /**
+     * Dev-only shortcut — signs in against a pre-created throwaway Supabase Auth
+     * account instead of sending a real (paid) OTP SMS. Only ever called from a
+     * BuildConfig.DEBUG-gated UI path; never reachable in a release build.
+     */
+    suspend fun signInWithPassword(email: String, password: String)
     suspend fun fetchProfile(userId: String): Profile?
     suspend fun createProfile(userId: String, phone: String?, fullName: String, role: UserRole)
     suspend fun signOut()
