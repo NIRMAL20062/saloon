@@ -1,10 +1,12 @@
 @AGENTS.md
+> **Client migration in progress:** the mobile client is moving from Expo/React Native to native Kotlin + Jetpack Compose. Read `docs/NATIVE_ANDROID_PLAN.md` and `docs/NATIVE_ANDROID_SPEC.md` before starting any new client work. **The backend below is unchanged and reused as-is** — same Supabase schema, RLS, and Edge Functions; everything in this document about Phases 1–5's server-side behavior, security rules, and product rules still applies verbatim. Only the client implementation (currently described below as Expo/React Native) is being replaced.
+
 # GLIDE — AI Development Context & Roadmap
 
 **Purpose of this document:** paste this into your AI coding assistant (Claude Code, Cursor, etc.) as project context. It tells the AI what GLIDE is, how to behave while building it, and exactly what to implement in each phase — screens, tables, fields, server logic, security controls, and tests — so it can act on this without you having to re-explain the product every session.
 
 **Builder:** first-time Android developer. Dev machine: MSI Modern 14, 8 GB RAM, Ubuntu.
-**Stack:** Expo SDK 54 (React Native 0.81 + TypeScript, Expo Router 6) + Supabase (Auth, Postgres, RLS, Realtime, Edge Functions) + Razorpay.
+**Stack:** Expo SDK 54 (React Native 0.81 + TypeScript, Expo Router 6) + Supabase (Auth, Postgres, RLS, Realtime, Edge Functions) + Razorpay — **being replaced client-side per the migration note above; Supabase/Razorpay stay.**
 
 > **Note for the AI assistant:** Expo has changed significantly across versions. Before writing any Expo-related code, check the exact versioned docs at `https://docs.expo.dev/versions/v54.0.0/` rather than relying on older training data or older tutorials.
 
