@@ -5,10 +5,12 @@ import com.glide.app.core.location.LocationTracker
 import com.glide.app.data.repository.SupabaseAuthRepository
 import com.glide.app.data.repository.SupabaseBookingRepository
 import com.glide.app.data.repository.SupabasePartnerRepository
+import com.glide.app.data.repository.SupabasePaymentRepository
 import com.glide.app.data.repository.SupabaseShopRepository
 import com.glide.app.domain.repository.AuthRepository
 import com.glide.app.domain.repository.BookingRepository
 import com.glide.app.domain.repository.PartnerRepository
+import com.glide.app.domain.repository.PaymentRepository
 import com.glide.app.domain.repository.ShopRepository
 import dagger.Binds
 import dagger.Module
@@ -39,4 +41,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindBookingRepository(impl: SupabaseBookingRepository): BookingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPaymentRepository(impl: SupabasePaymentRepository): PaymentRepository
 }
