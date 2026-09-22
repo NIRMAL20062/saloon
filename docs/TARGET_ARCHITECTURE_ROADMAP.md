@@ -1,5 +1,7 @@
 # GLIDE — Target Architecture Development Roadmap
 
+> **PAUSED — see the decision note at the top of `docs/TARGET_ARCHITECTURE.md`.** Phase 0 and Phase 1 (Auth Service) were completed and fully verified — real Postgres, 31 passing tests, a genuine end-to-end OTP/session flow — before the team decided to pause this track and stay on Supabase + Expo, since that stack already covers the ~200–300 user MVP target at $0/month. The Auth Service code itself was removed from the repo (this roadmap and the architecture doc are enough to reproduce it). Phases 2–13 below were never started. Resume from Phase 2 only once one of the triggers in `TARGET_ARCHITECTURE.md`'s decision note is actually true — not by default.
+
 > **Companion to `docs/TARGET_ARCHITECTURE.md`.** That document says *what* the end state looks like (services, stack, ownership). This document says *how a real team gets there* — phase by phase, who does what, what "done" means, and what has to pass before moving on.
 >
 > **Same ground rule as the architecture doc:** the current Expo/React Native + Supabase app stays live and keeps shipping throughout. Every phase below runs alongside it, feature-flagged and verified side-by-side, until each new piece has earned its cutover. Nothing here is a deadline — it's a sequence: don't start Phase *N* until Phase *N-1*'s exit criteria are actually met, not just "mostly done."
