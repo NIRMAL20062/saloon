@@ -1,0 +1,11 @@
+<resources>
+    <!--
+        Deliberately extends the framework's Light theme, not a DayNight one.
+        GLIDE has no dark mode by design (docs/THEME_AND_ROLES_COLOR_GUIDE.md) —
+        do not add a values-night/ variant of this file.
+    -->
+    <style name="Theme.Glide" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

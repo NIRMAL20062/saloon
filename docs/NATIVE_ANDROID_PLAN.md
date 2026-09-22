@@ -56,9 +56,9 @@ This reframes `GLIDE_NATIVE_BUILD_PLAN.md`'s "build the database schema first, a
 
 Phase numbers match the existing product roadmap in `docs/CLAUDE.md` §8, so status tracking (e.g. in `STARTUP_EXECUTION_ROADMAP.md`) stays consistent across both clients.
 
-### Phase 0 — Native project bootstrap *(new, native-only)*
-**Build:** Android Studio project (`com.glide.app`, minSdk 26, compileSdk/targetSdk 35), Gradle version catalog (`docs/NATIVE_ANDROID_SPEC.md` §1), Hilt, `MainActivity` with `enableEdgeToEdge()`.
-**Test:** Project builds clean; empty app launches edge-to-edge on a real phone.
+### Phase 0 — Native project bootstrap *(new, native-only)* — ✅ builds clean
+**Build:** Android Studio project (`com.glide.app`, minSdk 26, compileSdk/targetSdk 37 — see spec doc note on why 37, not the originally planned 35), Gradle version catalog (`docs/NATIVE_ANDROID_SPEC.md` §1), Hilt, `MainActivity` with `enableEdgeToEdge()`.
+**Test:** `./gradlew :app:assembleDebug` → `BUILD SUCCESSFUL`, verified in this repo at `android-native/`. **Not yet verified:** actually launching on a real phone/emulator — no device was attached in the environment this was built in. Do that check before treating Phase 0 as fully closed.
 
 ### Phase 1 — Foundation & Auth *(reused backend)*
 **Build:** Design system (`core/designsystem`) per the spec doc's exact hex tokens. Supabase Kotlin SDK client (GoTrue, Postgrest, Realtime, Storage) pointed at the **existing** project. Session persistence via `EncryptedSharedPreferences`/DataStore (Keystore-backed) — the native equivalent of `expo-secure-store`. Phone OTP screens; on success, read the existing `profiles` row and route by `role` (unchanged schema).

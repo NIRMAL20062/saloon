@@ -6,16 +6,24 @@
 
 ## 1. Gradle version catalog (`gradle/libs.versions.toml`)
 
+> **Verified against this machine's real toolchain**, not guessed: Android Studio's own project wizard (a throwaway stub it created independently) had already resolved AGP 9.3.2 against Gradle 9.5.0 and JDK 25 on this box, and the installed SDK only has platforms 36/37 (no 35). The catalog below is what actually built clean (`./gradlew :app:assembleDebug` → `BUILD SUCCESSFUL`), not the placeholder versions an earlier draft of this doc guessed at. Two corrections that matter beyond version numbers:
+> - **`compileSdk`/`targetSdk` are 37, not 35** — the Compose/AndroidX library versions current as of this build require it; 35 isn't even installed on this SDK.
+> - **AGP 9.x has Kotlin support built in.** Do not apply `org.jetbrains.kotlin.android` as a separate plugin — AGP now errors with "no longer required... since AGP 9.0" if you do. Only `org.jetbrains.kotlin.plugin.compose` (the Compose compiler plugin) is still applied separately. The old `kotlinOptions { jvmTarget = ... }` DSL block is gone with it; `compileOptions { sourceCompatibility / targetCompatibility }` in the `android {}` block is what controls this now.
+>
+> If you're building on a different machine with an older SDK/toolchain, these exact numbers may need to shift again — the two bullets above (no separate kotlin-android plugin, compileSdk driven by what your Compose version actually requires) are the durable lessons, not the literal version strings.
+
 ```toml
 [versions]
-agp = "8.8.0"
-kotlin = "2.1.0"
-composeBom = "2025.02.00"
-coreKtx = "1.15.0"
-lifecycle = "2.8.7"
-navigation = "2.8.7"
-hilt = "2.55"
-hiltNavigationCompose = "1.2.0"
+agp = "9.3.2"
+kotlin = "2.4.20"
+ksp = "2.3.12"
+composeBom = "2026.09.00"
+coreKtx = "1.19.0"
+lifecycle = "2.11.0"
+activityCompose = "1.13.0"
+navigation = "2.9.0"
+hilt = "2.60.1"
+hiltNavigationCompose = "1.4.0"
 supabase = "3.1.1"
 ktor = "3.1.0"
 coil = "3.1.0"
@@ -30,8 +38,8 @@ datastore = "1.1.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
-androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -68,11 +76,11 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+# No "kotlin-android" plugin — AGP 9.x has Kotlin support built in; applying it separately fails the build.
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version = "2.1.0-1.0.29" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ```
 
 **Not included, deliberately:** Room (`androidx.room`). See §2.
