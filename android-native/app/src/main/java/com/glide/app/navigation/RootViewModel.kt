@@ -2,7 +2,7 @@ package com.glide.app.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.glide.app.data.repository.AuthRepository
+import com.glide.app.domain.repository.AuthRepository
 import com.glide.app.domain.model.UserRole
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.jan.supabase.auth.status.SessionStatus
