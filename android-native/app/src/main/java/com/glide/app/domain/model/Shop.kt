@@ -48,11 +48,15 @@ enum class DayKey(val key: String) {
 
 data class DayHours(val closed: Boolean, val open: String, val close: String)
 
-/** `shops.opening_hours` defaults to `{}` in the schema — mirrors withOpeningHoursDefaults() in features/shops/partner-api.ts. */
-fun Shop.openingHours(): Map<DayKey, DayHours> {
+/**
+ * `shops.opening_hours` defaults to `{}` in the schema — mirrors withOpeningHoursDefaults() in
+ * features/shops/partner-api.ts. Shared by both `Shop` (customer-facing) and `OwnShop`
+ * (partner-facing) — same column, same shape, two different query column lists.
+ */
+fun parseOpeningHours(raw: JsonObject): Map<DayKey, DayHours> {
     val default = DayHours(closed = false, open = "09:00", close = "20:00")
     return DayKey.entries.associateWith { day ->
-        val entry = openingHoursRaw[day.key] as? JsonObject
+        val entry = raw[day.key] as? JsonObject
         DayHours(
             closed = entry?.get("closed")?.jsonPrimitive?.booleanOrNull ?: default.closed,
             open = entry?.get("open")?.jsonPrimitive?.contentOrNull ?: default.open,
@@ -60,3 +64,5 @@ fun Shop.openingHours(): Map<DayKey, DayHours> {
         )
     }
 }
+
+fun Shop.openingHours(): Map<DayKey, DayHours> = parseOpeningHours(openingHoursRaw)

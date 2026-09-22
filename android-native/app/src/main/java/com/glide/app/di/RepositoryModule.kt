@@ -3,8 +3,10 @@ package com.glide.app.di
 import com.glide.app.core.location.FusedLocationTracker
 import com.glide.app.core.location.LocationTracker
 import com.glide.app.data.repository.SupabaseAuthRepository
+import com.glide.app.data.repository.SupabasePartnerRepository
 import com.glide.app.data.repository.SupabaseShopRepository
 import com.glide.app.domain.repository.AuthRepository
+import com.glide.app.domain.repository.PartnerRepository
 import com.glide.app.domain.repository.ShopRepository
 import dagger.Binds
 import dagger.Module
@@ -27,4 +29,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindLocationTracker(impl: FusedLocationTracker): LocationTracker
+
+    @Binds
+    @Singleton
+    abstract fun bindPartnerRepository(impl: SupabasePartnerRepository): PartnerRepository
 }
