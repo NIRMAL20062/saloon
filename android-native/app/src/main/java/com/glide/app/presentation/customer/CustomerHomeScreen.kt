@@ -5,11 +5,10 @@ import com.glide.app.presentation.customer.explore.ExploreScreen
 import com.glide.app.ui.theme.CustomerTheme
 
 @Composable
-fun CustomerHomeScreen(onSignOut: () -> Unit) {
+fun CustomerHomeScreen(onSignOut: () -> Unit, onShopClick: (shopId: String) -> Unit) {
     CustomerTheme {
         ExploreScreen(
-            // Shop detail screen is Phase 4 (booking) territory — not built yet.
-            onShopClick = {},
+            onShopClick = onShopClick,
             onSignOut = onSignOut,
         )
     }
