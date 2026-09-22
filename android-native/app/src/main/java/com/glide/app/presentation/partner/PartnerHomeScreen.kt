@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.glide.app.presentation.partner.barbers.BarbersScreen
 import com.glide.app.presentation.partner.catalog.ServicesScreen
+import com.glide.app.presentation.partner.queue.RequestQueueScreen
 import com.glide.app.presentation.partner.shopsetup.ShopSetupScreen
 import com.glide.app.ui.theme.PartnerColors
 import com.glide.app.ui.theme.PartnerTheme
@@ -139,7 +140,7 @@ private fun PartnerTabs(
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val titles = listOf("Shop", "Services", "Barbers")
+    val titles = listOf("Requests", "Shop", "Services", "Barbers")
 
     Column(modifier = modifier.fillMaxSize()) {
         TabRow(
@@ -157,14 +158,15 @@ private fun PartnerTabs(
         }
         Column(modifier = Modifier.fillMaxSize().weight(1f)) {
             when (selectedTab) {
-                0 -> ShopSetupScreen(
+                0 -> RequestQueueScreen(shopId = state.shop.id)
+                1 -> ShopSetupScreen(
                     shop = state.shop,
                     onToggleOpen = onToggleOpen,
                     onSaveProfile = onSaveProfile,
                     onSaveHours = onSaveHours,
                 )
-                1 -> ServicesScreen(shopId = state.shop.id)
-                2 -> BarbersScreen(shopId = state.shop.id)
+                2 -> ServicesScreen(shopId = state.shop.id)
+                3 -> BarbersScreen(shopId = state.shop.id)
             }
         }
         Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.End) {

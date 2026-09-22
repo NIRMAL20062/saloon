@@ -14,6 +14,8 @@ import com.glide.app.presentation.auth.OnboardingScreen
 import com.glide.app.presentation.auth.OtpScreen
 import com.glide.app.presentation.auth.PhoneEntryScreen
 import com.glide.app.presentation.customer.CustomerHomeScreen
+import com.glide.app.presentation.customer.booking.BookingTrackerScreen
+import com.glide.app.presentation.customer.shopdetail.ShopDetailScreen
 import com.glide.app.presentation.partner.PartnerHomeScreen
 
 @Composable
@@ -59,7 +61,21 @@ fun AppNavHost(rootViewModel: RootViewModel = hiltViewModel()) {
             )
         }
         composable<Destination.CustomerHome> {
-            CustomerHomeScreen(onSignOut = rootViewModel::signOut)
+            CustomerHomeScreen(
+                onSignOut = rootViewModel::signOut,
+                onShopClick = { shopId -> navController.navigate(Destination.ShopDetails(shopId)) },
+            )
+        }
+        composable<Destination.ShopDetails> { backStackEntry ->
+            val args = backStackEntry.toRoute<Destination.ShopDetails>()
+            ShopDetailScreen(
+                shopId = args.shopId,
+                onBookingCreated = { bookingId -> navController.navigate(Destination.BookingTracker(bookingId)) },
+            )
+        }
+        composable<Destination.BookingTracker> { backStackEntry ->
+            val args = backStackEntry.toRoute<Destination.BookingTracker>()
+            BookingTrackerScreen(bookingId = args.bookingId)
         }
         composable<Destination.PartnerHome> {
             PartnerHomeScreen(onSignOut = rootViewModel::signOut)
