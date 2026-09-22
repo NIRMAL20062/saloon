@@ -1,5 +1,7 @@
 # GLIDE 💈
 
+![Android CI](https://github.com/NIRMAL20062/saloon/actions/workflows/android-ci.yml/badge.svg)
+
 > **On-Demand Barber & Salon Booking Platform for Android**
 > Built with Kotlin + Jetpack Compose, Supabase (PostgreSQL, RLS, Realtime, Edge Functions), and Razorpay.
 
