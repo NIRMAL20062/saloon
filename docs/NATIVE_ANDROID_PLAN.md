@@ -31,11 +31,12 @@ This reframes `GLIDE_NATIVE_BUILD_PLAN.md`'s "build the database schema first, a
 
 ---
 
-## 3. Where the native app lives, and the no-hard-cutover rule
+## 3. Where the native app lives
 
-- New Kotlin/Compose project lives in a new top-level directory, e.g. `android-native/`, alongside the existing Expo app — not replacing it in place.
-- The Expo app **stays deployable and in production** until the native app reaches Phase 5 parity on a real device, mirroring the exact non-negotiable already recorded in `docs/TARGET_ARCHITECTURE.md`: "migration happens module by module... never a hard stop-and-rewrite." Nothing that currently works gets deleted or paused to make room for this.
-- Package name: reuse `com.glide.app` per `ANDROID_STUDIO_PDA.md`, confirmed before any Play Store submission since it becomes permanent once published.
+- The Kotlin/Compose project lives in `android-native/` at the repo root.
+- Package name: reuse `com.glide.app`, confirmed before any Play Store submission since it becomes permanent once published.
+
+> **Update — the Expo app has been removed.** This section originally planned a no-hard-cutover approach (keep the Expo app deployable until native reached Phase 5 parity, mirroring `docs/TARGET_ARCHITECTURE.md`'s module-by-module migration principle). The team made an explicit, informed decision to cut over immediately instead, while native is still only through Phase 3 — accepting that Phases 4–13 (booking, payments, verification, refunds, notifications, instant booking, payouts, analytics) don't exist on any client right now. `app/`, `components/`, `features/`, `hooks/`, `lib/` and related Expo config/deps are gone from the repo; `features/shops/api.ts` etc. are no longer available to read as a reference — the phase-by-phase `Build:` notes in section 5 below and the git history of this file are what's left to mirror against. The Supabase backend is unaffected either way.
 
 ---
 

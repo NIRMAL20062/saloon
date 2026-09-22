@@ -1,5 +1,5 @@
 @AGENTS.md
-> **Client migration in progress:** the mobile client is moving from Expo/React Native to native Kotlin + Jetpack Compose. Read `docs/NATIVE_ANDROID_PLAN.md` and `docs/NATIVE_ANDROID_SPEC.md` before starting any new client work. **The backend below is unchanged and reused as-is** — same Supabase schema, RLS, and Edge Functions; everything in this document about Phases 1–5's server-side behavior, security rules, and product rules still applies verbatim. Only the client implementation (currently described below as Expo/React Native) is being replaced.
+> **The Expo/React Native client described below has been removed.** The mobile client is now native Kotlin + Jetpack Compose, in `android-native/`. Read `docs/NATIVE_ANDROID_PLAN.md` and `docs/NATIVE_ANDROID_SPEC.md` before starting any client work, and check `PROGRESS.md` for current phase status. **The backend below is unchanged and reused as-is** — same Supabase schema, RLS, and Edge Functions; everything in this document about Phases 1–5's server-side behavior, security rules, and product rules still applies verbatim. Everything below that describes the Expo app's screens/components/file paths is historical — it documents the phase-by-phase reasoning that produced the current schema and Edge Functions, not a client that still exists.
 
 # GLIDE — AI Development Context & Roadmap
 

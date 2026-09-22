@@ -1,7 +1,9 @@
-# GLIDE 💈 ,
+# GLIDE 💈
 
-> **On-Demand Barber & Salon Booking Platform for Android**  
-> Built with Expo SDK 54 (React Native + TypeScript), Supabase (PostgreSQL, RLS, Realtime, Edge Functions), and Razorpay.
+> **On-Demand Barber & Salon Booking Platform for Android**
+> Built with Kotlin + Jetpack Compose, Supabase (PostgreSQL, RLS, Realtime, Edge Functions), and Razorpay.
+
+> **Build status:** early native rebuild — see [`PROGRESS.md`](PROGRESS.md) for exactly what's done vs. not, phase by phase.
 
 ---
 
@@ -26,7 +28,7 @@ A booking becomes real and service can begin **only** when three independent con
 
 ## 👥 2. Dual-Sided Experience (Two Apps in One Codebase)
 
-GLIDE provides two tailored user experiences within a single unified React Native codebase using role-based routing:
+GLIDE provides two tailored user experiences within a single Kotlin/Compose codebase using role-based navigation:
 
 ```
                           ┌──────────────────────┐
@@ -36,23 +38,24 @@ GLIDE provides two tailored user experiences within a single unified React Nativ
                      ┌───────────────┴───────────────┐
                      ▼                               ▼
            [ Customer Experience ]         [ Partner Experience ]
-             (app/(customer)/...)            (app/(partner)/...)
+         presentation/customer/...       presentation/partner/...
 ```
 
 ### 💇 Customer App
-- **Geo-Discovery**: Browse nearby verified salons with live distance calculations (PostGIS) and open/closed operating status.
-- **Slot Booking**: Select specific haircut/styling services, choose a preferred barber, and pick available time slots.
-- **Real-Time Booking Status**: Live countdown timer while waiting for shop confirmation.
-- **Razorpay Checkout**: Seamless in-app payment via UPI, Cards, or NetBanking once the shop confirms.
-- **Saved Shops & Profile**: Manage favorite salons and view full booking history.
+- **Discovery**: Browse nearby verified salons with distance sorting and open/closed status. *(built)*
+- **Slot Booking**: Select services, choose a preferred barber, and pick available time slots. *(not built yet)*
+- **Real-Time Booking Status**: Live countdown while waiting for shop confirmation. *(not built yet)*
+- **Razorpay Checkout**: Native in-app payment via UPI, Cards, or NetBanking once the shop confirms. *(not built yet)*
 
 ### ✂️ Partner / Salon Owner App
-- **Live Booking Queue**: Instant incoming booking alerts with quick **Accept** or **Reject** actions before expiration.
-- **Shop Profile & Geolocation**: Manage shop address, GPS coordinates, and weekly operating hours.
-- **Services Catalog**: Configure service menu with pricing and duration.
-- **Staff / Barbers**: Add and manage individual barbers and their active availability.
+- **Shop Profile & Opening Hours**: Manage address, one-tap open/closed toggle, weekly hours. *(built)*
+- **Services Catalog**: Configure service menu with pricing and duration. *(built)*
+- **Staff / Barbers**: Add and manage individual barbers and their active availability. *(built)*
+- **Live Booking Queue**: Instant incoming booking alerts with Accept/Reject. *(not built yet)*
 
-> 🎨 **Design System & Color Guide**: Full dual-role color palettes, typography, and component specifications are documented in [`docs/THEME_AND_ROLES_COLOR_GUIDE.md`](./docs/THEME_AND_ROLES_COLOR_GUIDE.md).
+See [`PROGRESS.md`](PROGRESS.md) for the authoritative phase-by-phase status.
+
+> 🎨 **Design System & Color Guide**: Full dual-role color palettes are documented in [`docs/THEME_AND_ROLES_COLOR_GUIDE.md`](docs/THEME_AND_ROLES_COLOR_GUIDE.md) and implemented in `android-native/app/src/main/java/com/glide/app/ui/theme/`.
 
 ---
 
@@ -60,13 +63,13 @@ GLIDE provides two tailored user experiences within a single unified React Nativ
 
 | Technology | Role | Why It Was Chosen |
 | :--- | :--- | :--- |
-| **Expo SDK 54 + React Native 0.81** | Mobile Frontend | Modern mobile framework with fast performance, typed file-based navigation ([Expo Router](https://docs.expo.dev/router/introduction/)), smooth animations ([Reanimated](https://docs.swmansion.com/react-native-reanimated/)), and native haptic feedback. |
-| **TypeScript** | Language | Strict end-to-end type safety across mobile components, database definitions, and backend edge functions. |
-| **Supabase (PostgreSQL + PostGIS)** | Database & Geo | Relational database with built-in geospatial queries (`ST_DistanceSphere` for finding nearby shops by GPS) and real-time subscription capabilities. |
+| **Kotlin + Jetpack Compose** | Mobile Frontend | Native Android UI, real camera/hardware access (needed from Phase 6 onward), no cross-platform runtime tax. See `docs/NATIVE_ANDROID_PLAN.md` for the full decision record on why this replaced the earlier Expo/React Native client. |
+| **Hilt** | Dependency Injection | Standard Android DI; every repository is an interface bound to a Supabase-backed implementation, so ViewModels are unit-testable against hand-written fakes. |
+| **Supabase (PostgreSQL)** | Database | Relational database with real-time subscription capabilities. Unchanged since before the native rewrite — same schema, same migrations. |
 | **Row Level Security (RLS)** | Data Authorization | Zero-trust security model baked directly into the database engine. Customers can only read their own data; partners can only modify their own shops. |
-| **Supabase Edge Functions (Deno)** | Serverless Backend | Fast, isolated serverless functions that act as the **trust boundary**. Secret keys (Razorpay secret, Supabase service-role) never touch the mobile device. |
+| **Supabase Edge Functions (Deno)** | Serverless Backend | The **trust boundary**. Secret keys (Razorpay secret, Supabase service-role) never touch the mobile device. |
 | **Razorpay** | Payments | Full-featured payment gateway for Indian payment methods (UPI, Cards, NetBanking) with webhooks and signature verification. |
-| **`expo-secure-store`** | Storage | Hardware-backed encrypted storage for session tokens (JWTs) instead of insecure plaintext `AsyncStorage`. |
+| **`EncryptedSharedPreferences`** | Storage | Keystore-backed encrypted storage for session tokens, never plaintext. |
 
 ---
 
@@ -74,16 +77,16 @@ GLIDE provides two tailored user experiences within a single unified React Nativ
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Mobile Client (Expo 54)                  │
-│   • React Native • TypeScript • Expo Router 6               │
-│   • Quiet Luxury Dark Theme • expo-secure-store • Haptics    │
+│              Mobile Client (Kotlin + Compose)               │
+│   • Hilt DI • Fixed light-only Customer/Partner themes       │
+│   • EncryptedSharedPreferences • Type-safe Navigation        │
 └──────────────────────────────┬──────────────────────────────┘
                                │ Supabase Client SDK (Anon Key + JWT)
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    Supabase Backend                         │
 │  ┌────────────────────────┐    ┌──────────────────────────┐ │
-│  │ PostgreSQL + PostGIS   │    │ Row Level Security (RLS) │ │
+│  │ PostgreSQL            │    │ Row Level Security (RLS) │ │
 │  │ (Shops, Bookings, etc.)│    │ (Zero-trust user scoping)│ │
 │  └────────────────────────┘    └──────────────────────────┘ │
 │  ┌────────────────────────────────────────────────────────┐ │
@@ -106,27 +109,27 @@ GLIDE provides two tailored user experiences within a single unified React Nativ
 
 ```
 GLIDE/
-├── app/                        # Expo Router file-based screens
-│   ├── (auth)/                 # Login, OTP verification, Role selection
-│   ├── (customer)/             # Customer tabs (Explore, Saved, Profile, Book, Pay)
-│   ├── (partner)/              # Partner dashboard (Queue, Barbers, Services)
-│   └── _layout.tsx             # Root routing and AuthProvider wrapper
-├── components/                 # Reusable UI components (ShopCard, Badges, Modals)
-├── constants/                  # Color tokens (Quiet Luxury palette) and themes
-├── features/                   # Frontend domain APIs (shops, bookings, payments, auth)
-├── hooks/                      # Custom React hooks (useThemeColor, useColorScheme)
-├── lib/                        # Client libraries (Supabase client, Location, Haptics)
+├── android-native/                 # The mobile app (Kotlin + Jetpack Compose)
+│   └── app/src/main/java/com/glide/app/
+│       ├── core/                   # session, network, location, sms — infra
+│       ├── domain/                 # models + repository interfaces
+│       ├── data/                   # Supabase-backed repository implementations
+│       ├── di/                     # Hilt modules
+│       ├── navigation/             # type-safe destinations, root auth routing
+│       └── presentation/           # screens + ViewModels, by feature
+│           ├── auth/                customer/                partner/
 ├── supabase/
-│   ├── functions/              # Deno Edge Functions (Serverless backend & Webhooks)
-│   │   ├── create-booking/     # Validates slots & creates server-locked bookings
-│   │   ├── accept-booking/     # Partner acceptance transition
-│   │   ├── reject-booking/     # Partner rejection transition
-│   │   ├── create-payment-order/ # Server-side Razorpay order creation
-│   │   ├── razorpay-webhook/   # Idempotent signature-verified payment confirmation
-│   │   └── expire-bookings/    # Auto-expiry for stale booking requests
-│   └── migrations/             # Incremental PostgreSQL database migrations
-├── CLAUDE.md                   # Detailed engineering roadmap and architecture doc
-└── package.json                # Project scripts and dependencies
+│   ├── functions/                  # Deno Edge Functions (Serverless backend & Webhooks)
+│   │   ├── create-booking/         # Validates slots & creates server-locked bookings
+│   │   ├── accept-booking/         # Partner acceptance transition
+│   │   ├── reject-booking/         # Partner rejection transition
+│   │   ├── create-payment-order/   # Server-side Razorpay order creation
+│   │   ├── razorpay-webhook/       # Idempotent signature-verified payment confirmation
+│   │   └── expire-bookings/        # Auto-expiry for stale booking requests
+│   └── migrations/                 # Incremental PostgreSQL database migrations
+├── docs/                           # NATIVE_ANDROID_PLAN.md, NATIVE_ANDROID_SPEC.md, design/security docs
+├── PROGRESS.md                     # Phase-by-phase MVP build status
+└── AGENTS.md                       # AI-assistant entry point
 ```
 
 ---
@@ -134,101 +137,67 @@ GLIDE/
 ## 🚀 6. Getting Started & Local Setup
 
 ### Prerequisites
-- **Node.js** (v20 or newer recommended)
-- **npm** or **yarn**
-- **Expo Go** app on your physical mobile device (Android/iOS) or an Android Emulator / iOS Simulator.
-- A **Supabase** project (free tier works great).
-- A **Razorpay** test account (for payment testing).
+- **Android Studio** (or just a terminal + `adb` — Android Studio isn't required to build/install, only recommended for Compose Previews/Live Edit).
+- **JDK 17+**.
+- A physical Android phone with USB debugging enabled (recommended over an emulator on modest hardware), or an emulator.
+- A **Supabase** project (free tier works — this is the same backend the app has always used).
+- A **Razorpay** test account (for payment testing, from Phase 5 onward).
 
----
-
-### Step 1: Clone and Install Dependencies
+### Step 1: Clone
 
 ```bash
 git clone https://github.com/NIRMAL20062/saloon.git
-cd saloon
-npm install
+cd saloon/android-native
 ```
 
----
+### Step 2: Configure local credentials
 
-### Step 2: Configure Environment Variables
+Create `android-native/local.properties` (git-ignored) with:
 
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
-2. Open `.env` and fill in your Supabase project credentials (found under **Supabase Dashboard > Project Settings > API**):
-   ```env
-   EXPO_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-   EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-or-publishable-key
-   ```
+```properties
+sdk.dir=/path/to/your/Android/Sdk
+supabase.url=https://your-project-ref.supabase.co
+supabase.anonKey=your-anon-or-publishable-key
+```
 
-> [!IMPORTANT]
-> Mobile environment variables in Expo must be prefixed with `EXPO_PUBLIC_`. Secret keys (like `SUPABASE_SERVICE_ROLE_KEY` and `RAZORPAY_KEY_SECRET`) must **never** be placed in `.env` or in mobile code. They are configured securely inside Supabase Edge Functions.
+These become `BuildConfig.SUPABASE_URL` / `BuildConfig.SUPABASE_ANON_KEY` — the only Supabase values the app ever holds. Secret keys (`SUPABASE_SERVICE_ROLE_KEY`, `RAZORPAY_KEY_SECRET`) never go here; they're Supabase Edge Function environment variables only.
 
----
-
-### Step 3: Set Up Database (Supabase Migrations)
+### Step 3: Set up the database (Supabase migrations)
 
 Apply all SQL migrations to your Supabase project in numerical order:
 
 ```bash
-# If using the Supabase CLI:
+# If using the Supabase CLI, from the repo root:
 supabase db push
 
-# Or run the files located in supabase/migrations/ in your Supabase SQL Editor:
-# 0001_init.sql through 0013_resolve_security_definer_views.sql
+# Or run the files in supabase/migrations/ in your Supabase SQL Editor,
+# in order: 0001_init.sql through 0013_resolve_security_definer_views.sql
+```
+
+### Step 4: Build & install
+
+```bash
+./gradlew assembleDebug     # just build
+./gradlew installDebug      # build + install on a connected device (adb devices to check)
+adb shell am start -n com.glide.app/.MainActivity
+```
+
+### Step 5: Run the tests
+
+```bash
+./gradlew testDebugUnitTest    # JVM unit tests, no device needed
 ```
 
 ---
 
-### Step 4: Configure Supabase Edge Functions & Secrets
-
-Set the required environment secrets on your Supabase project for Edge Functions:
-
-```bash
-supabase secrets set \
-  RAZORPAY_KEY_ID="rzp_test_..." \
-  RAZORPAY_KEY_SECRET="your_razorpay_secret" \
-  RAZORPAY_WEBHOOK_SECRET="your_webhook_secret"
-```
-
-Deploy the functions:
-```bash
-supabase functions deploy create-booking
-supabase functions deploy accept-booking
-supabase functions deploy reject-booking
-supabase functions deploy create-payment-order
-supabase functions deploy razorpay-webhook
-supabase functions deploy expire-bookings
-```
-
----
-
-### Step 5: Start the App
-
-```bash
-npx expo start
-```
-
-- **Physical Device (Recommended)**: Scan the QR code shown in your terminal using the **Expo Go** app.
-- **Android Emulator**: Press `a` in the terminal.
-- **Web Preview**: Press `w` in the terminal.
-
----
-
-## 🧪 7. Available Scripts
+## 🧪 7. Common Gradle Tasks
 
 | Command | Purpose |
 | :--- | :--- |
-| `npm run start` | Starts the Expo development server. |
-| `npm run android` | Starts Metro bundler and opens on connected Android device/emulator. |
-| `npm run ios` | Starts Metro bundler and opens on iOS simulator. |
-| `npm run web` | Starts local web bundler. |
-| `npm run typecheck` | Runs TypeScript compiler check (`tsc --noEmit`) without building. |
-| `npm run lint` | Runs ESLint on project files. |
-| `npm test` | Runs Jest unit and integration tests. |
+| `./gradlew assembleDebug` | Build the debug APK. |
+| `./gradlew installDebug` | Build and install on a connected device/emulator. |
+| `./gradlew testDebugUnitTest` | Run JVM unit tests (ViewModels against fakes — no device needed). |
+| `./gradlew lint` | Run Android Lint. |
 
 ---
 
