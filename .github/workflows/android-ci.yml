@@ -31,6 +31,17 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Accept Android SDK licenses
+        # setup-android's own license step is interactive (it prompts
+        # "Accept? (y/N)" per license) and hangs/fails with no stdin in CI.
+        # Piping `yes` answers every prompt so it completes non-interactively.
+        # sdkmanager isn't reliably on PATH (setup-android may fetch a fresh
+        # versioned cmdline-tools dir), so locate the binary directly instead
+        # of assuming a name is resolvable.
+        run: |
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -n1)
+          yes | "$SDKMANAGER" --licenses --sdk_root="$ANDROID_HOME" || true
+
       - name: Cache/restore Gradle
         uses: gradle/actions/setup-gradle@v4
 
