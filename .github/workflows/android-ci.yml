@@ -28,18 +28,19 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Accept Android SDK licenses
-        # setup-android's own license step is interactive (it prompts
-        # "Accept? (y/N)" per license) and hangs/fails with no stdin in CI.
-        # Piping `yes` answers every prompt so it completes non-interactively.
-        # sdkmanager isn't reliably on PATH (setup-android may fetch a fresh
-        # versioned cmdline-tools dir), so locate the binary directly instead
-        # of assuming a name is resolvable.
+        # GitHub's ubuntu-latest runner ships with a working Android SDK
+        # preinstalled at $ANDROID_HOME already — no separate setup action
+        # needed. (android-actions/setup-android@v3 was used here before;
+        # it tries to replace the preinstalled cmdline-tools with a fresh
+        # download and then fails outright trying to license it, well before
+        # Gradle ever runs.) sdkmanager isn't reliably on PATH, so locate the
+        # binary directly instead of assuming the name resolves.
         run: |
           SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | sort -V | tail -n1)
+          # sdkmanager --licenses is known to exit non-zero even after
+          # successfully accepting every license; a genuinely missing
+          # license shows up as a hard failure in the Gradle steps below.
           yes | "$SDKMANAGER" --licenses --sdk_root="$ANDROID_HOME" || true
 
       - name: Cache/restore Gradle
