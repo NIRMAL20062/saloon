@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.play.services.location)
     implementation(libs.play.services.auth)
+    implementation(libs.razorpay.checkout)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

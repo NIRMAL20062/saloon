@@ -24,7 +24,11 @@ import com.glide.app.domain.model.BookingStatus
 import com.glide.app.ui.theme.CustomerColors
 
 @Composable
-fun BookingTrackerScreen(bookingId: String, viewModel: BookingTrackerViewModel = hiltViewModel()) {
+fun BookingTrackerScreen(
+    bookingId: String,
+    onPayNow: (bookingId: String) -> Unit,
+    viewModel: BookingTrackerViewModel = hiltViewModel(),
+) {
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(bookingId) { viewModel.refresh(bookingId) }
 
@@ -49,6 +53,13 @@ fun BookingTrackerScreen(bookingId: String, viewModel: BookingTrackerViewModel =
                             Text("₹${booking.totalAmount / 100.0}", color = CustomerColors.Accent)
                         }
                     }
+
+                    if (booking.status == BookingStatus.PAYMENT_PENDING) {
+                        Button(onClick = { onPayNow(booking.id) }, modifier = Modifier.fillMaxWidth()) {
+                            Text("Pay ₹${booking.totalAmount / 100.0}")
+                        }
+                    }
+
                     Text(
                         "This screen doesn't update live yet — tap refresh to check again.",
                         style = MaterialTheme.typography.labelSmall,
@@ -65,7 +76,7 @@ fun BookingTrackerScreen(bookingId: String, viewModel: BookingTrackerViewModel =
 
 private fun statusHeadline(status: BookingStatus): String = when (status) {
     BookingStatus.DRAFT, BookingStatus.AWAITING_SHOP -> "Waiting for the shop to respond"
-    BookingStatus.PAYMENT_PENDING -> "Accepted — payment coming in a future update"
+    BookingStatus.PAYMENT_PENDING -> "Accepted — payment required"
     BookingStatus.CONFIRMED -> "Confirmed"
     BookingStatus.REJECTED -> "Declined by the shop"
     BookingStatus.EXPIRED -> "Expired — the shop didn't respond in time"
@@ -73,7 +84,7 @@ private fun statusHeadline(status: BookingStatus): String = when (status) {
 
 private fun statusDescription(status: BookingStatus): String = when (status) {
     BookingStatus.DRAFT, BookingStatus.AWAITING_SHOP -> "The shop has a short window to accept or decline."
-    BookingStatus.PAYMENT_PENDING -> "The shop accepted. Payment (Phase 5) isn't built yet, so this stays here for now."
+    BookingStatus.PAYMENT_PENDING -> "The shop accepted your booking. Complete payment to confirm your slot."
     BookingStatus.CONFIRMED -> "Your slot is booked."
     BookingStatus.REJECTED -> "No charge was made — nothing to refund."
     BookingStatus.EXPIRED -> "No charge was made — try booking again."

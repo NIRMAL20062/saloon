@@ -10,4 +10,5 @@ sealed interface Destination {
     @Serializable data object PartnerHome : Destination
     @Serializable data class ShopDetails(val shopId: String) : Destination
     @Serializable data class BookingTracker(val bookingId: String) : Destination
+    @Serializable data class Payment(val bookingId: String) : Destination
 }

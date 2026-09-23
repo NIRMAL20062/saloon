@@ -15,6 +15,7 @@ import com.glide.app.presentation.auth.OtpScreen
 import com.glide.app.presentation.auth.PhoneEntryScreen
 import com.glide.app.presentation.customer.CustomerHomeScreen
 import com.glide.app.presentation.customer.booking.BookingTrackerScreen
+import com.glide.app.presentation.customer.checkout.PaymentScreen
 import com.glide.app.presentation.customer.shopdetail.ShopDetailScreen
 import com.glide.app.presentation.partner.PartnerHomeScreen
 
@@ -75,7 +76,17 @@ fun AppNavHost(rootViewModel: RootViewModel = hiltViewModel()) {
         }
         composable<Destination.BookingTracker> { backStackEntry ->
             val args = backStackEntry.toRoute<Destination.BookingTracker>()
-            BookingTrackerScreen(bookingId = args.bookingId)
+            BookingTrackerScreen(
+                bookingId = args.bookingId,
+                onPayNow = { bookingId -> navController.navigate(Destination.Payment(bookingId)) },
+            )
+        }
+        composable<Destination.Payment> { backStackEntry ->
+            val args = backStackEntry.toRoute<Destination.Payment>()
+            PaymentScreen(
+                bookingId = args.bookingId,
+                onCheckoutFinished = { navController.popBackStack() },
+            )
         }
         composable<Destination.PartnerHome> {
             PartnerHomeScreen(onSignOut = rootViewModel::signOut)
